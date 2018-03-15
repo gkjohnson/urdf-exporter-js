@@ -1,0 +1,33 @@
+{
+  "name": "urdf-exporter",
+  "version": "0.0.1",
+  "description": "THREE.js utility for exporting object trees as a URDF file",
+  "main": "URDFExporter.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gkjohnson/urdf-exporter-js.git"
+  },
+  "author": "Garrett Johnson <garrett.kjohnson@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/gkjohnson/urdf-exporter-js/issues"
+  },
+  "homepage": "https://github.com/gkjohnson/urdf-exporter-js#readme",
+  "keywords": [
+    "javascript",
+    "three",
+    "threejs",
+    "graphics",
+    "geometry",
+    "model",
+    "urdf",
+    "export",
+    "exporter"
+  ],
+  "devDependencies": {
+    "three": "^0.90.0"
+  }
+}
