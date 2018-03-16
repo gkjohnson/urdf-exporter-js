@@ -13,7 +13,8 @@ class URDFExporter {
 
     // mesh func returns
     // {
-    //   filename
+    //   name,
+    //   ext,
     //   data
     // }
 
@@ -23,6 +24,19 @@ class URDFExporter {
     // maybe auto collapse fixed links.
 
     // TODO: consider an options object instead of many function parameters
+
+    static imageToData(image) {
+        this._canvas = this._canvas || document.createElement('canvas');
+        this._context = this._context || this._canvas.getContext('2D');
+
+        this._canvas.width = image.naturalWidth;
+        this._canvas.height = image.naturalHeight;
+
+        this._context.drawImage(image, 0, 0);
+
+        return canvas.toDataURL('image/png').replace(/^data:image\/(png|jpg);base64,/, '');
+    }
+
 
     static parse(object, robotname, jointfunc, meshfunc, packageprefix = 'package://') {
 
@@ -59,7 +73,7 @@ class URDFExporter {
                     
                     link += '<geometry>';
                     {
-                        link += `<mesh filename="${packageprefix}/meshes/${meshInfo.filename}" />`
+                        link += `<mesh filename="${packageprefix}/meshes/${meshInfo.name}.${meshInfo.ext}" />`
                     }
                     link += '</geometry>';
                     
@@ -68,10 +82,24 @@ class URDFExporter {
                         const col = child.material.color;
                         const rgba = `${col.r} ${col.g} ${col.b} 1`;
 
-                        link += `<color rgba="${rgba}" />`
+                        link += `<color rgba="${rgba}" />`;
 
-                        // TODO: add texture if needed and write texture
-                        // to array
+                        if (child.map) {
+
+                            let texInfo = texMap.get(child.material.map);
+                            if (!texInfo) {
+                                texInfo = {
+                                    name: meshInfo.name,
+                                    ext: 'png',
+                                    data: this.imageToData(child.material.map.image)
+                                }
+                                texMap.set(child.material.map, texInfo);
+                                textures.push(texInfo);
+                            }
+
+                            link += `<texture filename="${packageprefix}/textures/${texInfo.name}.${texInfo.ext}" />`;
+
+                        }
                     }
                     link += '</material>';
                 }
