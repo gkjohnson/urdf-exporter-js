@@ -1,10 +1,13 @@
+// THREE.js URDF Exporter
+// http://wiki.ros.org/urdf/XML/
+
 class URDFExporter {
 
     // joint func returns
     // {
     //   name
     //   type
-    //   limits: { lower, upper }
+    //   limits: { lower, upper, velocity, effort }
     //   axis
     // }
 
@@ -36,7 +39,6 @@ class URDFExporter {
         object.traverse( child => {
             
             const linkName = child.name || `_link_${namelessLinkCount++}`;
-            console.log(child, linkName)
             linksMap.set(child, linkName);
 
             let joint = '';
@@ -84,8 +86,7 @@ class URDFExporter {
             if (child !== object) {
 
                 const jointInfo = jointfunc(child) || {};
-                const { axis, type, name, limits } = jointInfo;
-                const name = jointInfo.name ;
+                const { axis, type, name, limits, effort } = jointInfo;
 
                 joint = `<joint name="${name || `_joint_${namelessJointCount++}`}" type="${type || 'fixed'}">`;
                 {
@@ -109,7 +110,7 @@ class URDFExporter {
 
                     if (limits) {
 
-                        let limit = '<limit ';
+                        let limit = `<limit velocity="${limits.velocity || 0}" effort="${limits.effort || 0}" `;
                         if (limits.lower != null) {
                             limit += `lower="${limits.lower}"`;
                         }
