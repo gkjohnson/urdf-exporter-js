@@ -4,6 +4,7 @@
   "description": "THREE.js utility for exporting object trees as a URDF file",
   "main": "URDFExporter.js",
   "scripts": {
+    "start": "static-server",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -28,6 +29,9 @@
     "exporter"
   ],
   "devDependencies": {
-    "three": "^0.90.0"
+    "ply-exporter": "^1.0.0",
+    "static-server": "^2.2.0",
+    "three": "^0.90.0",
+    "urdf-loader": "^0.1.1"
   }
 }
