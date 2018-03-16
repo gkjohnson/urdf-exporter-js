@@ -11,8 +11,15 @@ class URDFExporter {
     // mesh func returns
     // {
     //   filename
-    //   file
+    //   data
     // }
+
+    // TODO: consider a function afford skipping certain links
+    // If we import then export a URDF, for example, it will add extra
+    // objects for joints that shouldn't necessarily be in the description. Or
+    // maybe auto collapse fixed links.
+
+    // TODO: consider an options object instead of many function parameters
 
     static parse(object, robotname, jointfunc, meshfunc, packageprefix = 'package://') {
 
@@ -21,23 +28,26 @@ class URDFExporter {
         const texMap = new WeakMap();
         const meshes = [];
         const textures = [];
-        
+        let namelessLinkCount = 0;
+
         let urdf = `<robot name="${robotname}">`;
 
         object.traverse( child => {
             
-            const name = child.name;
-            linksMap.set(child, name);
+            const linkName = child.name || `_link_${namelessLinkCount++}`;
+            console.log(child, linkName)
+            linksMap.set(child, linkName);
 
             let joint = '';
-            let link = `<link name="${name}">`;
+            let link = `<link name="${linkName}">`;
 
             if (child instanceof THREE.Mesh && child.geometry) {
                 
                 let meshInfo = meshesMap.get(child.geometry);
-                if (!mesh) {
-                    meshInfo = meshFunc(child);
+                if (!meshInfo) {
+                    meshInfo = meshfunc(child);
                     meshesMap.set(child.geometry, meshInfo);
+                    meshes.push(meshInfo);
                 }
 
                 link += '<visual>';
@@ -85,15 +95,13 @@ class URDFExporter {
 
                     joint += `<parent link="${linksMap.get(child.parent)}" />`;
 
-                    joint += `<child link="${name}" />`;
+                    joint += `<child link="${linkName}" />`;
 
                     // TODO: Transform the axis into URDF space
                     if (axis) {
                         joint += `<axis xyz="${axis.x} ${axis.y} ${axis.z}" />`
                     }
 
-
-                    // TODO: add limit
                     if (limits) {
 
                         let limit = '<limit ';
