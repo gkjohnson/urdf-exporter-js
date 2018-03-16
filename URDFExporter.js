@@ -93,7 +93,7 @@ class URDFExporter {
                     const pos = `${child.position.x} ${child.position.y} ${child.position.z}`;
                     
                     // URDF uses fixed-axis rotations, while THREE uses moving-axis rotations
-                    const euler = child.euler.clone();
+                    const euler = child.rotation.clone();
                     euler.order = 'ZYX';
                     const rot = `${euler.x} ${euler.y} ${euler.z}`
 
