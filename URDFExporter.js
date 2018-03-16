@@ -29,6 +29,7 @@ class URDFExporter {
         const meshes = [];
         const textures = [];
         let namelessLinkCount = 0;
+        let namelessJointCount = 0;
 
         let urdf = `<robot name="${robotname}">`;
 
@@ -82,10 +83,11 @@ class URDFExporter {
            
             if (child !== object) {
 
-                const jointInfo = jointfunc(child);
+                const jointInfo = jointfunc(child) || {};
                 const { axis, type, name, limits } = jointInfo;
+                const name = jointInfo.name ;
 
-                joint = `<joint name="${name}" type="${type || 'fixed'}">`;
+                joint = `<joint name="${name || `_joint_${namelessJointCount++}`}" type="${type || 'fixed'}">`;
                 {
                     const pos = `${child.position.x} ${child.position.y} ${child.position.z}`;
                     
