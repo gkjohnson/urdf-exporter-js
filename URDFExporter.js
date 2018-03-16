@@ -87,11 +87,14 @@ class URDFExporter {
 
                 joint = `<joint name="${name}" type="${type || 'fixed'}">`;
                 {
-                    // TODO: add position
-                    // TODO: get local pos and rot relative to the parent
-                    // and transformed into the URDF frame
+                    const pos = `${child.position.x} ${child.position.y} ${child.position.z}`;
+                    
+                    // URDF uses fixed-axis rotations, while THREE uses moving-axis rotations
+                    const euler = child.euler.clone();
+                    euler.order = 'ZYX';
+                    const rot = `${euler.x} ${euler.y} ${euler.z}`
 
-                    joint += `<origin xyz="" rpy="" />`;
+                    joint += `<origin xyz="${pos}" rpy="${rot}" />`;
 
                     joint += `<parent link="${linksMap.get(child.parent)}" />`;
 
