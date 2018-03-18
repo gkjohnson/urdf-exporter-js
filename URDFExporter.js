@@ -25,7 +25,19 @@ class URDFExporter {
 
     // TODO: consider an options object instead of many function parameters
 
-    static imageToData(image) {
+    static get STLExporter() {
+        return this._stlExporter = this._stlExporter || new THREE.STLExporter();
+    }
+
+    static _defaultMeshCallback(o, linkName) {
+        return {
+            name: linkName,
+            ext: 'stl',
+            data: URDFExporter.STLExporter.parse(o)
+        }
+    }
+
+    static _imageToData(image) {
         this._canvas = this._canvas || document.createElement('canvas');
         this._context = this._context || this._canvas.getContext('2D');
 
@@ -57,7 +69,7 @@ class URDFExporter {
             .join('\n');        
     }
 
-    static parse(object, robotname, jointfunc, meshfunc, packageprefix = 'package://') {
+    static parse(object, robotname, jointfunc, meshfunc = this._defaultMeshCallback, packageprefix = 'package://') {
 
         const linksMap = new WeakMap();
         const meshesMap = new WeakMap();
@@ -81,7 +93,7 @@ class URDFExporter {
                 
                 let meshInfo = meshesMap.get(child.geometry);
                 if (!meshInfo) {
-                    meshInfo = meshfunc(child);
+                    meshInfo = meshfunc(child, linkName);
                     meshesMap.set(child.geometry, meshInfo);
                     meshes.push(meshInfo);
                 }
@@ -110,7 +122,7 @@ class URDFExporter {
                                 texInfo = {
                                     name: meshInfo.name,
                                     ext: 'png',
-                                    data: this.imageToData(child.material.map.image)
+                                    data: this._imageToData(child.material.map.image)
                                 }
                                 texMap.set(child.material.map, texInfo);
                                 textures.push(texInfo);
@@ -131,8 +143,8 @@ class URDFExporter {
             link += '</link>';
            
             if (child !== object) {
-
-                const jointInfo = jointfunc(child) || {};
+                const parentName = linksMap.get(child.parent);
+                const jointInfo = jointfunc(child, linkName, parentName) || {};
                 const { axis, type, name, limits, effort } = jointInfo;
 
                 joint = `<joint name="${name || `_joint_${namelessJointCount++}`}" type="${type || 'fixed'}">`;
@@ -146,7 +158,7 @@ class URDFExporter {
 
                     joint += `<origin xyz="${pos}" rpy="${rot}" />`;
 
-                    joint += `<parent link="${linksMap.get(child.parent)}" />`;
+                    joint += `<parent link="${parentName}" />`;
 
                     joint += `<child link="${linkName}" />`;
 
