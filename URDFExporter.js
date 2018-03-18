@@ -37,6 +37,25 @@ class URDFExporter {
         return canvas.toDataURL('image/png').replace(/^data:image\/(png|jpg);base64,/, '');
     }
 
+    static _format(urdf) {
+        const IS_END_TAG = /^<\//;
+        const IS_SELF_CLOSING = /\/>$/;
+        const pad = (ch, num) => (num > 0 ? ch + pad(ch, num - 1) : '');
+        
+        let tagnum = 0;
+        return urdf
+            .match(/<[^>]+>/g)
+            .map(tag => {
+                const res = `${pad('  ', tagnum)}${tag}`;
+
+                if (!IS_SELF_CLOSING.test(tag)) {
+                    tagnum += IS_END_TAG.test(tag) ? -1 : 1;
+                }
+
+                return res;
+            })
+            .join('\n');        
+    }
 
     static parse(object, robotname, jointfunc, meshfunc, packageprefix = 'package://') {
 
@@ -159,7 +178,7 @@ class URDFExporter {
 
         urdf += '</robot>';
 
-        return { urdf, meshes, textures }
+        return { urdf: this._format(urdf), meshes, textures }
 
     }
 
