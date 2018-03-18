@@ -150,7 +150,6 @@ class URDFExporter {
 
                     joint += `<child link="${linkName}" />`;
 
-                    // TODO: Transform the axis into URDF space
                     if (axis) {
                         joint += `<axis xyz="${axis.x} ${axis.y} ${axis.z}" />`
                     }
