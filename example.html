@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="./node_modules/three/build/three.min.js"></script>
+    <script src="./node_modules/three/examples/js/loaders/STLLoader.js"></script>
+    <script src="./node_modules/ply-exporter/PLYExporter.js"></script>
+    <script src="./node_modules/urdf-loader/URDFLoader.js"></script>
+    <script src="./node_modules/jszip/dist/jszip.min.js"></script>
+
+    <script type="text/javascript" src="./URDFExporter.js"></script>
+
+    <title></title>
+</head>
+<body>
+
+
+    <script type="text/javascript">
+        // https://stackoverflow.com/questions/19327749/javascript-blob-filename-without-link
+        var saveData = (function () {
+            var a = document.createElement("a");
+            document.body.appendChild(a);
+            a.style = "display: none";
+            return function (data, fileName) {
+                var blob = new Blob([ data ], { type: "octet/stream" }),
+                    url = window.URL.createObjectURL(blob);
+                a.href = url;
+                a.download = fileName;
+                a.click();
+                window.URL.revokeObjectURL(url);
+            };
+        }());
+
+
+
+        URDFLoader.load('./urdf', 'T12/urdf/T12.URDF', robot => {
+            robot = robot[0]
+
+            // time out so the meshes have had time to load
+            // we should have an event on the parser for when all
+            // meshes have loaded
+
+            // because we're loading from a URDFParser data here, there will be a lot of
+            // extra / unneeded nodes.
+            setTimeout(() => {
+                const plyexp = new THREE.PLYExporter();
+                const res = URDFExporter.parse(
+                    robot,
+                    'T12',
+                    o => {
+                        if (o.urdf) {
+                            return {
+                                name: o.name + 'joint',
+                                type: o.urdf.type,
+                                limits: {
+                                    lower: o.urdf.min,
+                                    lower: o.urdf.max,
+                                }
+                            };
+                        }
+
+                        return {}
+                    }, o => {
+
+                        const ply = plyexp.parse(o);
+
+                        return {
+                            name: o.parent.name,
+                            ext: 'ply',
+                            data: ply
+                        }
+
+                    })
+
+                const zip = new JSZip();
+                zip.file('T12.URDF', res.urdf);
+
+                const meshes = zip.folder('meshes');
+                res.meshes.forEach(m => meshes.file(`${m.name}.${m.ext}`, m.data))
+
+                const textures = zip.folder('images');
+                res.textures.forEach(m => textures.file(`${m.name}.${m.ext}`, m.data))
+
+                zip
+                    .generateAsync({ type: 'uint8array' })
+                    // .then(zipdata => saveData(zipdata, 't12urdf.zip'));
+
+            }, 1000)
+        })
+    </script>
+</body>
+</html>
