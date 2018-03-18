@@ -20,19 +20,8 @@ function jointFunc (obj, childName, parentName) {
   return {};
 }
 
-// Optional callback for generating a mesh for
-// a given link. If not provided, then an STL
-// exporter is used.
-function meshFunc(obj, linkName) {
-  return {
-      name: linkName,
-      ext: 'ply',
-      data: new THREE.PLYExporter().parse(obj)
-  }
-}
-
 // Generate the URDF file and associate meshes and textures
-const res = URDFExporter.parse(robot, 'T12', jointFunc, meshFunc);
+const res = URDFExporter.parse(robot, 'T12', jointFunc);
 
 // Save out a zip using JSZip (https://stuk.github.io/jszip/)
 // with the file structure
