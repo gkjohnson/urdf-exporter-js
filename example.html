@@ -3,6 +3,7 @@
 <head>
     <script src="./node_modules/three/build/three.min.js"></script>
     <script src="./node_modules/three/examples/js/loaders/STLLoader.js"></script>
+    <script src="./node_modules/three/examples/js/exporters/STLExporter.js"></script>
     <script src="./node_modules/ply-exporter/PLYExporter.js"></script>
     <script src="./node_modules/urdf-loader/URDFLoader.js"></script>
     <script src="./node_modules/jszip/dist/jszip.min.js"></script>
@@ -42,43 +43,46 @@
             // because we're loading from a URDFParser data here, there will be a lot of
             // extra / unneeded nodes.
             setTimeout(() => {
-                const plyexp = new THREE.PLYExporter();
-                const res = URDFExporter.parse(
-                    robot,
-                    'T12',
-                    o => {
-                        if (o.urdf) {
-                            return {
-                                name: o.name + 'joint',
-                                type: o.urdf.type,
-                                limits: {
-                                    lower: o.urdf.min,
-                                    lower: o.urdf.max,
-                                }
-                            };
-                        }
+                // Function callback for defining the attributes for
+                // the joint to be generated for the associated link.
+                // If not provided, `fixed` joint type is used.
+                function jointFunc (obj, childName, parentName) {
+                  if (obj.urdf) {
+                      return {
+                          name: obj.name + 'joint',
+                          type: obj.urdf.type,
+                          limits: {
+                              lower: obj.urdf.min,
+                              lower: obj.urdf.max,
+                          }
+                      };
+                  }
+                  return {};
+                }
 
-                        return {}
-                    }, o => {
+                // Optional callback for generating a mesh for
+                // a given link. If not provided, then an STL
+                // exporter is used.
+                function meshFunc(obj, linkName) {
+                  return {
+                      name: linkName,
+                      ext: 'ply',
+                      data: new THREE.PLYExporter().parse(obj)
+                  }
+                }
 
-                        const ply = plyexp.parse(o);
+                const res = URDFExporter.parse(robot, 'T12', jointFunc);
 
-                        return {
-                            name: o.parent.name,
-                            ext: 'ply',
-                            data: ply
-                        }
-
-                    })
+                window.res = res
 
                 const zip = new JSZip();
                 zip.file('T12.URDF', res.urdf);
 
                 const meshes = zip.folder('meshes');
-                res.meshes.forEach(m => meshes.file(`${m.name}.${m.ext}`, m.data))
+                res.meshes.forEach(m => meshes.file(`${m.name}.${m.ext}`, m.data));
 
                 const textures = zip.folder('images');
-                res.textures.forEach(m => textures.file(`${m.name}.${m.ext}`, m.data))
+                res.textures.forEach(m => textures.file(`${m.name}.${m.ext}`, m.data));
 
                 zip
                     .generateAsync({ type: 'uint8array' })
