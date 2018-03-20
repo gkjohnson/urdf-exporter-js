@@ -104,7 +104,7 @@ class URDFExporter {
                     
                     link += '<geometry>';
                     {
-                        link += `<mesh filename="${packageprefix}/meshes/${meshInfo.name}.${meshInfo.ext}" />`
+                        link += `<mesh filename="${packageprefix}meshes/${meshInfo.name}.${meshInfo.ext}" />`
                     }
                     link += '</geometry>';
                     
@@ -128,7 +128,7 @@ class URDFExporter {
                                 textures.push(texInfo);
                             }
 
-                            link += `<texture filename="${packageprefix}/textures/${texInfo.name}.${texInfo.ext}" />`;
+                            link += `<texture filename="${packageprefix}textures/${texInfo.name}.${texInfo.ext}" />`;
 
                         }
                     }
