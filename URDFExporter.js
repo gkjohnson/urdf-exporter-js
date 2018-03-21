@@ -34,6 +34,12 @@ class URDFExporter {
         return newName in map ? this._makeUnique(name, map, appendNum + 1) : newName;
     }
 
+    static _normalizePackagePath(path) {
+        return path
+            .replace(/[\\/]+/g, '/')
+            .replace(/^package:\/*/i, 'package://');
+    }
+
     static _defaultMeshCallback(o, linkName) {
         return {
             name: linkName,
@@ -111,7 +117,8 @@ class URDFExporter {
                     
                     link += '<geometry>';
                     {
-                        link += `<mesh filename="${packageprefix}meshes/${meshInfo.name}.${meshInfo.ext}" />`
+                        const meshpath = this._normalizePackagePath(`${packageprefix}/meshes/${meshInfo.name}.${meshInfo.ext}`);
+                        link += `<mesh filename="${meshpath}" />`
                     }
                     link += '</geometry>';
                     
@@ -135,7 +142,8 @@ class URDFExporter {
                                 textures.push(texInfo);
                             }
 
-                            link += `<texture filename="${packageprefix}textures/${texInfo.name}.${texInfo.ext}" />`;
+                            const texpath = this._normalizePackagePath(`${packageprefix}/textures/${texInfo.name}.${texInfo.ext}`);
+                            link += `<texture filename="${texpath}" />`;
 
                         }
                     }
