@@ -29,6 +29,11 @@ class URDFExporter {
         return this._stlExporter = this._stlExporter || new THREE.STLExporter();
     }
 
+    static _makeUnique(name, map, appendNum = 0) {
+        const newName = `${ name }${ appendNum ? appendNum : '' }`;
+        return newName in map ? this._makeUnique(name, map, appendNum + 1) : newName;
+    }
+
     static _defaultMeshCallback(o, linkName) {
         return {
             name: linkName,
@@ -76,14 +81,16 @@ class URDFExporter {
         const texMap = new WeakMap();
         const meshes = [];
         const textures = [];
-        let namelessLinkCount = 0;
-        let namelessJointCount = 0;
+
+        let linksNameMap = {};
+        let jointsNameMap = {};
 
         let urdf = `<robot name="${robotname}">`;
 
-        object.traverse( child => {
+        object.traverse(child => {
             
-            const linkName = child.name || `_link_${namelessLinkCount++}`;
+            const linkName = this._makeUnique(child.name || `_link_`, linksNameMap);
+            linksNameMap[linkName] = true;
             linksMap.set(child, linkName);
 
             let joint = '';
@@ -147,7 +154,10 @@ class URDFExporter {
                 const jointInfo = jointfunc(child, linkName, parentName) || {};
                 const { axis, type, name, limits, effort } = jointInfo;
 
-                joint = `<joint name="${name || `_joint_${namelessJointCount++}`}" type="${type || 'fixed'}">`;
+                const jointName = this._makeUnique(name || '_joint_', jointsNameMap);
+                jointsNameMap[jointName] = true;
+
+                joint = `<joint name="${jointName}" type="${type || 'fixed'}">`;
                 {
                     const pos = `${child.position.x} ${child.position.y} ${child.position.z}`;
                     

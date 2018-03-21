@@ -49,7 +49,7 @@
                 function jointFunc (obj, childName, parentName) {
                   if (obj.urdf) {
                       return {
-                          name: obj.name + 'joint',
+                          name: obj.name,
                           type: obj.urdf.type,
                           limits: {
                               lower: obj.urdf.min,
