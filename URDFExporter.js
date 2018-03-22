@@ -18,28 +18,25 @@ class URDFExporter {
     //   data
     // }
 
-    // TODO: consider a function afford skipping certain links
-    // If we import then export a URDF, for example, it will add extra
-    // objects for joints that shouldn't necessarily be in the description. Or
-    // maybe auto collapse fixed links.
-
-    // TODO: consider an options object instead of many function parameters
-
     static get STLExporter() {
         return this._stlExporter = this._stlExporter || new THREE.STLExporter();
     }
 
-    static _makeUnique(name, map, appendNum = 0) {
+    // Makes the provided name unique.
+    // 'map' is an object with keys of already taken names
+    static _makeNameUnique(name, map, appendNum = 0) {
         const newName = `${ name }${ appendNum ? appendNum : '' }`;
-        return newName in map ? this._makeUnique(name, map, appendNum + 1) : newName;
+        return newName in map ? this._makeNameUnique(name, map, appendNum + 1) : newName;
     }
 
+    // Fix duplicate slashes in a file path
     static _normalizePackagePath(path) {
         return path
             .replace(/[\\/]+/g, '/')
             .replace(/^package:\/*/i, 'package://');
     }
 
+    // The default callback for generating mesh data from a link
     static _defaultMeshCallback(o, linkName) {
         return {
             name: linkName,
@@ -48,6 +45,7 @@ class URDFExporter {
         }
     }
 
+    // Convert a texture to png image data
     static _imageToData(image) {
         this._canvas = this._canvas || document.createElement('canvas');
         this._context = this._context || this._canvas.getContext('2D');
@@ -60,6 +58,7 @@ class URDFExporter {
         return canvas.toDataURL('image/png').replace(/^data:image\/(png|jpg);base64,/, '');
     }
 
+    // Convert the urdf xml into a well-formatted, indented format
     static _format(urdf) {
         const IS_END_TAG = /^<\//;
         const IS_SELF_CLOSING = /\/>$/;
@@ -80,28 +79,32 @@ class URDFExporter {
             .join('\n');        
     }
 
+    // Convert the object into a urdf and get the associated
+    // mesh and texture data
     static parse(object, robotname, jointfunc, meshfunc = this._defaultMeshCallback, packageprefix = 'package://') {
 
-        const linksMap = new WeakMap();
-        const meshesMap = new WeakMap();
-        const texMap = new WeakMap();
-        const meshes = [];
-        const textures = [];
+        const linksMap = new WeakMap();     // object > name
+        const meshesMap = new WeakMap();    // geometry > mesh data
+        const texMap = new WeakMap();       // texture > image data
+        const meshes = [];                  // array of meshes info to save
+        const textures = [];                // array of texture info to save
 
+        // used link and joint names
         let linksNameMap = {};
         let jointsNameMap = {};
 
         let urdf = `<robot name="${robotname}">`;
 
         object.traverse(child => {
-            
-            const linkName = this._makeUnique(child.name || `_link_`, linksNameMap);
+
+            const linkName = this._makeNameUnique(child.name || `_link_`, linksNameMap);
             linksNameMap[linkName] = true;
             linksMap.set(child, linkName);
 
             let joint = '';
             let link = `<link name="${linkName}">`;
 
+            // Create the link tag
             if (child instanceof THREE.Mesh && child.geometry) {
                 
                 let meshInfo = meshesMap.get(child.geometry);
@@ -157,12 +160,13 @@ class URDFExporter {
             
             link += '</link>';
            
+            // Create the joint tag
             if (child !== object) {
                 const parentName = linksMap.get(child.parent);
                 const jointInfo = jointfunc(child, linkName, parentName) || {};
                 const { axis, type, name, limits, effort } = jointInfo;
 
-                const jointName = this._makeUnique(name || '_joint_', jointsNameMap);
+                const jointName = this._makeNameUnique(name || '_joint_', jointsNameMap);
                 jointsNameMap[jointName] = true;
 
                 joint = `<joint name="${jointName}" type="${type || 'fixed'}">`;
