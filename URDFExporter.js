@@ -83,9 +83,83 @@ class URDFExporter {
             .join('\n');        
     }
 
+    // Remove any unnecessary joints and links that fixed and have identity transforms
+    static _collapseLinks(urdf) {
+        const xmlDoc = (new DOMParser()).parseFromString(urdf, 'text/xml');
+        const robottag = xmlDoc.children[0];
+
+        // cache the children as an array
+        const children = [...robottag.children];
+
+        // get the list of links indexed by name
+        const linksMap = {};
+        const links = children.filter(t => t.tagName.toLowerCase() === 'link');
+        links.forEach(l => linksMap[l.getAttribute('name')] = l);
+
+        // remove the unnecessary joints
+        const joints = children.filter(t => t.tagName.toLowerCase() === 'joint');
+        joints.forEach(j => {
+            const origin = [...j.children].filter(t => t.tagName.toLowerCase() === 'origin')[0];
+            const type = j.getAttribute('type') || 'fixed';
+
+            // if the node is fixed and has an identity transform then we can remove it
+            const xyz = origin.getAttribute('xyz') || '0 0 0';
+            const rpy = origin.getAttribute('rpy') || '0 0 0';
+            if (type === 'fixed' && (!origin || xyz === '0 0 0' && rpy === '0 0 0')) {
+
+                const childName =
+                    [...j.children]
+                        .filter(t => t.tagName.toLowerCase() === 'child')[0]
+                        .getAttribute('link');
+
+                const parentName =
+                    [...j.children]
+                        .filter(t => t.tagName.toLowerCase() === 'parent')[0]
+                        .getAttribute('link');
+
+                // find joints that have this joint as the parent and move it to the parent
+                joints.forEach(j2 => 
+                    [...j2.children]
+                        .filter(t => t.tagName.toLowerCase === 'parent')
+                        .filter(t => t.getAttribute('link') === childName)
+                        .forEach(t => t.setAttribute('link', parentName))
+                );
+
+                // remove this joint from the robot
+                robottag.removeChild(j);
+            }
+        });
+
+        // remove any links that arent referenced by the existing joints
+        [...robottag.children]
+            .filter(t => t.tagName.toLowerCase() === 'joint')
+            .forEach(j => {
+                
+                const childName =
+                    [...j.children]
+                        .filter(t => t.tagName.toLowerCase() === 'child')[0]
+                        .getAttribute('link');
+
+                const parentName =
+                    [...j.children]
+                        .filter(t => t.tagName.toLowerCase() === 'parent')[0]
+                        .getAttribute('link');
+
+                delete linksMap[childName];
+                delete linksMap[parentName];
+
+            });
+
+        // the links remaining aren't being referenced by any
+        // joints and can be removed
+        for (const name in linksMap) robottag.removeChild(linksMap[name]);
+
+        return new XMLSerializer().serializeToString(xmlDoc.documentElement);
+    }
+
     // Convert the object into a urdf and get the associated
     // mesh and texture data
-    static parse(object, robotname, jointfunc, meshfunc = this._defaultMeshCallback, packageprefix = 'package://') {
+    static parse(object, robotname, jointfunc, meshfunc = this._defaultMeshCallback, packageprefix = 'package://', collapse = true) {
 
         const linksMap = new WeakMap();     // object > name
         const meshesMap = new WeakMap();    // geometry > mesh data
@@ -222,7 +296,10 @@ class URDFExporter {
 
         urdf += '</robot>';
 
-        return { urdf: this._format(urdf), meshes, textures }
+        // format the final output
+        const finalurdf = this._format(collapse ? this._collapseLinks(urdf) : urdf);
+        
+        return { urdf: finalurdf, meshes, textures }
 
     }
 
