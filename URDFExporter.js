@@ -95,7 +95,11 @@ class URDFExporter {
 
         let urdf = `<robot name="${robotname}">`;
 
-        object.traverse(child => {
+
+        const stack = [object];
+        while (stack.length) {
+            const child = stack.pop();
+            stack.push(...child.children)
 
             const linkName = this._makeNameUnique(child.name || `_link_`, linksNameMap);
             linksNameMap[linkName] = true;
@@ -207,7 +211,7 @@ class URDFExporter {
 
             urdf += link;
             urdf += joint;
-        });
+        }
 
         urdf += '</robot>';
 
