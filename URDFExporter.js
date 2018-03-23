@@ -97,6 +97,7 @@ class URDFExporter {
 
 
         const stack = [object];
+        let parent = null;
         while (stack.length) {
             const child = stack.pop();
             stack.push(...child.children)
@@ -165,8 +166,8 @@ class URDFExporter {
             link += '</link>';
            
             // Create the joint tag
-            if (child !== object) {
-                const parentName = linksMap.get(child.parent);
+            if (parent) {
+                const parentName = linksMap.get(parent);
                 const jointInfo = jointfunc(child, linkName, parentName) || {};
                 const { axis, type, name, limits, effort } = jointInfo;
 
@@ -211,6 +212,8 @@ class URDFExporter {
 
             urdf += link;
             urdf += joint;
+
+            parent = child;
         }
 
         urdf += '</robot>';
