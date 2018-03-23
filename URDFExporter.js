@@ -68,10 +68,14 @@ class URDFExporter {
         return urdf
             .match(/<[^>]+>/g)
             .map(tag => {
+                if (!IS_SELF_CLOSING.test(tag) && IS_END_TAG.test(tag)) {
+                    tagnum --;
+                }
+
                 const res = `${pad('  ', tagnum)}${tag}`;
 
-                if (!IS_SELF_CLOSING.test(tag)) {
-                    tagnum += IS_END_TAG.test(tag) ? -1 : 1;
+                if (!IS_SELF_CLOSING.test(tag) && !IS_END_TAG.test(tag)) {
+                    tagnum ++;
                 }
 
                 return res;
