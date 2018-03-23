@@ -51,9 +51,10 @@
                       return {
                           name: obj.name,
                           type: obj.urdf.type,
+                          axis: obj.urdf.axis || new THREE.Vector3(0, 0, 1),
                           limits: {
                               lower: obj.urdf.min,
-                              lower: obj.urdf.max,
+                              upper: obj.urdf.max,
                           }
                       };
                   }

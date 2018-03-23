@@ -98,6 +98,9 @@ class URDFExporter {
 
         // remove the unnecessary joints
         const joints = children.filter(t => t.tagName.toLowerCase() === 'joint');
+
+        // TODO: Do we need to traverse in reverse so as nodes are removed, they're taken into
+        // account in subsequent collapses? Order is important here.
         joints.forEach(j => {
             const origin = [...j.children].filter(t => t.tagName.toLowerCase() === 'origin')[0];
             const type = j.getAttribute('type') || 'fixed';
@@ -117,16 +120,40 @@ class URDFExporter {
                         .filter(t => t.tagName.toLowerCase() === 'parent')[0]
                         .getAttribute('link');
 
-                // find joints that have this joint as the parent and move it to the parent
-                joints.forEach(j2 => 
-                    [...j2.children]
-                        .filter(t => t.tagName.toLowerCase === 'parent')
-                        .filter(t => t.getAttribute('link') === childName)
-                        .forEach(t => t.setAttribute('link', parentName))
-                );
+                // how many child joints reference the same joint as this parent
+                const parentsChildren =
+                    joints.filter(j2 =>
+                        [...j.children]
+                            .filter(t => t.tagName.toLowerCase() === 'parent')
+                            .filter(t => t.getAttribute('link') === parentName)
+                            .length !== 0
+                    ).length
 
-                // remove this joint from the robot
-                robottag.removeChild(j);
+                // collapse the node if
+                // 1. The link we'll be removing has no children so there will be no effect
+                // 2. The link has children (like a visual node) making it meaningful AND there are
+                // no other joints that reference this parent link, so we can move the meaningful
+                // information into there
+
+                // TODO: Consider just removing the parent node instead of the child node if the child
+                // node has children. We should just remove the least complicated link.
+                if (linksMap[parentName].children.length === 0 || linksMap[childName].children.length !== 0 && parentsChildren === 1) {
+
+                    if (linksMap[childName].children.length) {
+                        [...linksMap[childName].children].forEach(c => linksMap[parentName].appendChild(c));
+                    }
+
+                    // find joints that have this joint as the parent and move it to the parent
+                    joints.forEach(j2 => 
+                        [...j2.children]
+                            .filter(t => t.tagName.toLowerCase() === 'parent')
+                            .filter(t => t.getAttribute('link') === childName)
+                            .forEach(t => t.setAttribute('link', parentName))
+                    );
+
+                    // remove this joint from the robot
+                    robottag.removeChild(j);
+                }
             }
         });
 
@@ -160,6 +187,7 @@ class URDFExporter {
     // Convert the object into a urdf and get the associated
     // mesh and texture data
     static parse(object, robotname, jointfunc, meshfunc = this._defaultMeshCallback, packageprefix = 'package://', collapse = true) {
+        if (collapse) console.warn('The "collapse" functionality isn\'t stable and my corrupt the structure of the URDF');
 
         const linksMap = new WeakMap();     // object > name
         const meshesMap = new WeakMap();    // geometry > mesh data
@@ -172,14 +200,7 @@ class URDFExporter {
         let jointsNameMap = {};
 
         let urdf = `<robot name="${robotname}">`;
-
-
-        const stack = [object];
-        let parent = null;
-        while (stack.length) {
-            const child = stack.pop();
-            stack.push(...child.children)
-
+        object.traverse(child => {
             const linkName = this._makeNameUnique(child.name || `_link_`, linksNameMap);
             linksNameMap[linkName] = true;
             linksMap.set(child, linkName);
@@ -244,8 +265,8 @@ class URDFExporter {
             link += '</link>';
            
             // Create the joint tag
-            if (parent) {
-                const parentName = linksMap.get(parent);
+            if (child !== object) {
+                const parentName = linksMap.get(child.parent);
                 const jointInfo = jointfunc(child, linkName, parentName) || {};
                 const { axis, type, name, limits, effort } = jointInfo;
 
@@ -290,9 +311,7 @@ class URDFExporter {
 
             urdf += link;
             urdf += joint;
-
-            parent = child;
-        }
+        });
 
         urdf += '</robot>';
 
