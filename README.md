@@ -44,7 +44,7 @@ zip
 ```
 
 ### API
-#### URDFExporter.parse(object, robotname, jointfunc, meshfunc, packageprefix)
+#### URDFExporter.parse(object, robotname, jointfunc, meshfunc, packageprefix, collapse)
 
 Processes the given `object` into a URDF file and assets. Returns an object of the form
 ```js
@@ -108,3 +108,8 @@ function meshFunc(obj, linkName) {
 _optional_
 
 The prefix to prepend to all file paths. Defaults to `package://`.
+
+##### collapse
+_optional_
+
+Attempts to collapse unnecessary joints to remove any meaningless links in the URDF (identity transform, fixed). Experimental. Defaults to false.
