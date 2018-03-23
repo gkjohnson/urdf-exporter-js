@@ -186,7 +186,7 @@ class URDFExporter {
 
     // Convert the object into a urdf and get the associated
     // mesh and texture data
-    static parse(object, robotname, jointfunc, meshfunc = this._defaultMeshCallback, packageprefix = 'package://', collapse = true) {
+    static parse(object, robotname, jointfunc, meshfunc = this._defaultMeshCallback, packageprefix = 'package://', collapse = false) {
         if (collapse) console.warn('The "collapse" functionality isn\'t stable and my corrupt the structure of the URDF');
 
         const linksMap = new WeakMap();     // object > name
