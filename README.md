@@ -1,5 +1,8 @@
 # urdf-exporter-js
-Utility for exporting THREE.js object trees as a URDF file
+
+[![npm version](https://badge.fury.io/js/urdf-exporter.svg)](https://www.npmjs.com/package/urdf-exporter)
+
+Utility for exporting THREE.js object trees as a URDF file.
 
 ## URDFExporter
 ```js
