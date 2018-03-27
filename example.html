@@ -10,7 +10,7 @@
 
     <script type="text/javascript" src="./URDFExporter.js"></script>
 
-    <title></title>
+    <title>URDF Exporter Example</title>
 </head>
 <body>
 
@@ -18,11 +18,11 @@
     <script type="text/javascript">
         // https://stackoverflow.com/questions/19327749/javascript-blob-filename-without-link
         var saveData = (function () {
-            var a = document.createElement("a");
+            var a = document.createElement('a');
             document.body.appendChild(a);
-            a.style = "display: none";
+            a.style = 'display: none';
             return function (data, fileName) {
-                var blob = new Blob([ data ], { type: "octet/stream" }),
+                var blob = new Blob([ data ], { type: 'octet/stream' }),
                     url = window.URL.createObjectURL(blob);
                 a.href = url;
                 a.download = fileName;
