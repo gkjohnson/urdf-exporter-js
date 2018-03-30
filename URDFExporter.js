@@ -45,18 +45,40 @@ class URDFExporter {
         }
     }
 
-    // Convert a texture to png image data
-    static _imageToData(image) {
-        this._canvas = this._canvas || document.createElement('canvas');
-        this._context = this._context || this._canvas.getContext('2D');
+    static _base64ToBuffer(str) {
+        const b = atob(str);
+        const buf = new Uint8Array(b.length);
 
-        this._canvas.width = image.naturalWidth;
-        this._canvas.height = image.naturalHeight;
+        for (var i = 0, l = buf.length; i < l; i ++) {
+            buf[i] = b.charCodeAt(i);
+        }
 
-        this._context.drawImage(image, 0, 0);
-
-        return canvas.toDataURL('image/png').replace(/^data:image\/(png|jpg);base64,/, '');
+        return buf;
     }
+
+    // Convert a texture to png image data
+    static _imageToData(image, ext) {
+
+            this._canvas = this._canvas || document.createElement('canvas');
+            this._ctx = this._ctx || canvas.getContext('2d');
+
+            const canvas = this._canvas;
+            const ctx = this._ctx;
+
+            canvas.width = image.naturalWidth;
+            canvas.height = image.naturalHeight;
+
+            ctx.drawImage(image, 0, 0);
+
+            // Get the base64 encoded data
+            const base64data = canvas
+                        .toDataURL(`image/${ ext }`, 1)
+                        .replace(/^data:image\/(png|jpg);base64,/, '');
+
+            // Convert to a uint8 array
+            return this._base64ToBuffer(base64data);
+
+        }
 
     // Convert the urdf xml into a well-formatted, indented format
     static _format(urdf) {
@@ -240,10 +262,11 @@ class URDFExporter {
 
                             let texInfo = texMap.get(child.material.map);
                             if (!texInfo) {
+                                const ext = 'png';
                                 texInfo = {
                                     name: meshInfo.name,
-                                    ext: 'png',
-                                    data: this._imageToData(child.material.map.image)
+                                    ext,
+                                    data: this._imageToData(child.material.map.image, ext)
                                 }
                                 texMap.set(child.material.map, texInfo);
                                 textures.push(texInfo);
