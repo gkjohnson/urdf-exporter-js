@@ -31,7 +31,7 @@
             };
         }());
 
-
+        const exporter = new URDFExporter();
 
         URDFLoader.load('./urdf', 'T12/urdf/T12.URDF', robot => {
             robot = robot[0]
@@ -64,7 +64,7 @@
                 // Optional callback for generating a mesh for
                 // a given link. If not provided, then an STL
                 // exporter is used.
-                function meshFunc(obj, linkName) {
+                function createMesh(obj, linkName) {
                   return {
                       name: linkName,
                       ext: 'ply',
@@ -72,7 +72,7 @@
                   }
                 }
 
-                const res = URDFExporter.parse(robot, 'T12', jointFunc, meshFunc);
+                const res = exporter.parse(robot, 'T12', jointFunc, { createMesh, collapse: true });
 
                 window.res = res
 
