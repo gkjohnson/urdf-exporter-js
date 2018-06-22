@@ -21,7 +21,6 @@ customElements.define('urdf-viewer', URDFViewer);
 const exporter = new URDFExporter();
 const loader = new URDFLoader();
 const el = document.querySelector('urdf-viewer');
-el.addEventListener('error', e => console.error(e))
 
 loader.load('./urdf', 'r2_description/robots/r2b.URDF', robot => {
 
@@ -39,6 +38,7 @@ loader.load('./urdf', 'r2_description/robots/r2b.URDF', robot => {
         function jointFunc (obj, childName, parentName) {
 
             if (obj.urdf) {
+
                 return {
                     name: obj.name,
                     type: obj.urdf.type,
@@ -63,6 +63,7 @@ loader.load('./urdf', 'r2_description/robots/r2b.URDF', robot => {
                 name: linkName,
                 ext: 'ply',
                 data: new THREE.PLYExporter().parse(obj),
+                includesMaterials: false,
             };
 
         }
@@ -83,7 +84,6 @@ loader.load('./urdf', 'r2_description/robots/r2b.URDF', robot => {
 
         });
 
-
         el.package = '/stub';
         el.urdf = 'exported.urdf';
 
@@ -100,6 +100,6 @@ loader.load('./urdf', 'r2_description/robots/r2b.URDF', robot => {
         //     .generateAsync({ type: 'uint8array' })
         //     // .then(zipdata => saveData(zipdata, 't12urdf.zip'));
 
-    }, 1000);
+    }, 3000);
 
 });

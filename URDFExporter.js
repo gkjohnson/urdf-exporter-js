@@ -46,11 +46,12 @@ class URDFExporter {
     // The default callback for generating mesh data from a link
     _defaultMeshCallback (o, linkName) {
 
-        // TODO: Include a DAE exporter?
+        // TODO: Include a DAE exporter
         return {
             name: linkName,
             ext: 'stl',
             data: this.STLExporter.parse(o, { binary: true }),
+            includesMaterials: false,
         };
 
     }
@@ -279,60 +280,61 @@ class URDFExporter {
 
                 }
 
-                link += '<visual>';
-                {
+                if (meshInfo != null) {
 
-                    // TODO: adjust this appropriately
-                    link += '<origin xyz="0 0 0" rpy="0 0 0" />';
-
-                    link += '<geometry>';
+                    link += '<visual>';
                     {
 
-                        const meshpath = this._normalizePackagePath(`${ packageprefix }/meshes/${ meshInfo.name }.${ meshInfo.ext }`);
-                        link += `<mesh filename="${ meshpath }" scale="${ child.scale.toArray().join(' ') }" />`;
+                        link += '<origin xyz="0 0 0" rpy="0 0 0" />';
 
-                    }
-                    link += '</geometry>';
-
-                    if (child.material && !Array.isArray(child.material)) {
-
-                        link += '<material name="">';
+                        link += '<geometry>';
                         {
 
-                            const col = child.material.color;
-                            console.log(child, child.material)
-                            const rgba = `${ col.r } ${ col.g } ${ col.b } 1`;
+                            const meshpath = this._normalizePackagePath(`${ packageprefix }/meshes/${ meshInfo.name }.${ meshInfo.ext }`);
+                            link += `<mesh filename="${ meshpath }" scale="${ child.scale.toArray().join(' ') }" />`;
 
-                            link += `<color rgba="${ rgba }" />`;
+                        }
+                        link += '</geometry>';
 
-                            if (child.map) {
+                        if (!meshInfo.includesMaterials && child.material && !Array.isArray(child.material)) {
 
-                                let texInfo = texMap.get(child.material.map);
-                                if (!texInfo) {
+                            link += '<material name="">';
+                            {
 
-                                    const ext = 'png';
-                                    texInfo = {
-                                        name: meshInfo.name,
-                                        ext,
-                                        data: this._imageToData(child.material.map.image, ext),
-                                    };
-                                    texMap.set(child.material.map, texInfo);
-                                    textures.push(texInfo);
+                                const col = child.material.color;
+                                const rgba = `${ col.r } ${ col.g } ${ col.b } 1`;
+
+                                link += `<color rgba="${ rgba }" />`;
+
+                                if (child.map) {
+
+                                    let texInfo = texMap.get(child.material.map);
+                                    if (!texInfo) {
+
+                                        const ext = 'png';
+                                        texInfo = {
+                                            name: meshInfo.name,
+                                            ext,
+                                            data: this._imageToData(child.material.map.image, ext),
+                                        };
+                                        texMap.set(child.material.map, texInfo);
+                                        textures.push(texInfo);
+
+                                    }
+
+                                    const texpath = this._normalizePackagePath(`${ packageprefix }/textures/${ texInfo.name }.${ texInfo.ext }`);
+                                    link += `<texture filename="${ texpath }" />`;
 
                                 }
 
-                                const texpath = this._normalizePackagePath(`${ packageprefix }/textures/${ texInfo.name }.${ texInfo.ext }`);
-                                link += `<texture filename="${ texpath }" />`;
-
                             }
+                            link += '</material>';
 
                         }
-                        link += '</material>';
 
                     }
-
+                    link += '</visual>';
                 }
-                link += '</visual>';
 
                 // TODO: add matching collision
 
@@ -353,12 +355,12 @@ class URDFExporter {
                 joint = `<joint name="${ jointName }" type="${ type || 'fixed' }">`;
                 {
 
-                    const pos = `${ child.position.x } ${ child.position.y } ${ child.position.z }`;
+                    const pos = child.position.toArray().join(' ');
 
                     // URDF uses fixed-axis rotations, while THREE uses moving-axis rotations
                     const euler = child.rotation.clone();
-                    euler.order = 'ZYX';
-                    const rot = `${ euler.x } ${ euler.y } ${ euler.z }`;
+                    euler.reorder('ZYX');
+                    const rot = euler.toArray().join(' ');
 
                     joint += `<origin xyz="${ pos }" rpy="${ rot }" />`;
 
@@ -371,7 +373,6 @@ class URDFExporter {
                         joint += `<axis xyz="${ axis.x } ${ axis.y } ${ axis.z }" />`;
 
                     }
-                    console.log(jointInfo)
 
                     if (limit) {
 
@@ -389,9 +390,6 @@ class URDFExporter {
                         }
 
                         limitNode += ' ></limit>';
-
-                        console.log(limitNode)
-
                         joint += limitNode;
 
                     }
