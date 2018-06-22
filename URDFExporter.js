@@ -274,6 +274,9 @@ class URDFExporter {
                 let meshInfo = meshesMap.get(child.geometry);
                 if (!meshInfo) {
 
+                    // TODO: This isn't necessarily correct if two objects have
+                    // the same geometry but different materials. This should
+                    // create a hash based on the materials _and_ geometry
                     meshInfo = meshfunc(child, linkName);
                     meshesMap.set(child.geometry, meshInfo);
                     meshes.push(meshInfo);
