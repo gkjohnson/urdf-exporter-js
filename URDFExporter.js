@@ -8,7 +8,7 @@ class URDFExporter {
     // {
     //   name
     //   type
-    //   limits: { lower, upper, velocity, effort }
+    //   limit: { lower, upper, velocity, effort }
     //   axis
     // }
 
@@ -241,7 +241,7 @@ class URDFExporter {
     // mesh and texture data
     parse (object, robotname, jointfunc, options = {}) {
 
-        const meshfunc = options.createMesh || this._defaultMeshCallback;
+        const meshfunc = options.createMesh || this._defaultMeshCallback.bind(this);
         const packageprefix = options.packagePrefix || 'package://';
         const collapse = options.collapse || false;
 
@@ -282,48 +282,54 @@ class URDFExporter {
                 link += '<visual>';
                 {
 
+                    // TODO: adjust this appropriately
                     link += '<origin xyz="0 0 0" rpy="0 0 0" />';
 
                     link += '<geometry>';
                     {
 
                         const meshpath = this._normalizePackagePath(`${ packageprefix }/meshes/${ meshInfo.name }.${ meshInfo.ext }`);
-                        link += `<mesh filename="${ meshpath }" />`;
+                        link += `<mesh filename="${ meshpath }" scale="${ child.scale.toArray().join(' ') }" />`;
 
                     }
                     link += '</geometry>';
 
-                    link += '<material name="">';
-                    {
+                    if (child.material && !Array.isArray(child.material)) {
 
-                        const col = child.material.color;
-                        const rgba = `${ col.r } ${ col.g } ${ col.b } 1`;
+                        link += '<material name="">';
+                        {
 
-                        link += `<color rgba="${ rgba }" />`;
+                            const col = child.material.color;
+                            console.log(child, child.material)
+                            const rgba = `${ col.r } ${ col.g } ${ col.b } 1`;
 
-                        if (child.map) {
+                            link += `<color rgba="${ rgba }" />`;
 
-                            let texInfo = texMap.get(child.material.map);
-                            if (!texInfo) {
+                            if (child.map) {
 
-                                const ext = 'png';
-                                texInfo = {
-                                    name: meshInfo.name,
-                                    ext,
-                                    data: this._imageToData(child.material.map.image, ext),
-                                };
-                                texMap.set(child.material.map, texInfo);
-                                textures.push(texInfo);
+                                let texInfo = texMap.get(child.material.map);
+                                if (!texInfo) {
+
+                                    const ext = 'png';
+                                    texInfo = {
+                                        name: meshInfo.name,
+                                        ext,
+                                        data: this._imageToData(child.material.map.image, ext),
+                                    };
+                                    texMap.set(child.material.map, texInfo);
+                                    textures.push(texInfo);
+
+                                }
+
+                                const texpath = this._normalizePackagePath(`${ packageprefix }/textures/${ texInfo.name }.${ texInfo.ext }`);
+                                link += `<texture filename="${ texpath }" />`;
 
                             }
 
-                            const texpath = this._normalizePackagePath(`${ packageprefix }/textures/${ texInfo.name }.${ texInfo.ext }`);
-                            link += `<texture filename="${ texpath }" />`;
-
                         }
+                        link += '</material>';
 
                     }
-                    link += '</material>';
 
                 }
                 link += '</visual>';
@@ -339,7 +345,7 @@ class URDFExporter {
 
                 const parentName = linksMap.get(child.parent);
                 const jointInfo = jointfunc(child, linkName, parentName) || {};
-                const { axis, type, name, limits } = jointInfo;
+                const { axis, type, name, limit } = jointInfo;
 
                 const jointName = this._makeNameUnique(name || '_joint_', jointsNameMap);
                 jointsNameMap[jointName] = true;
@@ -365,25 +371,28 @@ class URDFExporter {
                         joint += `<axis xyz="${ axis.x } ${ axis.y } ${ axis.z }" />`;
 
                     }
+                    console.log(jointInfo)
 
-                    if (limits) {
+                    if (limit) {
 
-                        let limit = `<limit velocity="${ limits.velocity || 0 }" effort="${ limits.effort || 0 }" `;
-                        if (limits.lower != null) {
+                        let limitNode = `<limit velocity="${ limit.velocity || 0 }" effort="${ limit.effort || 0 }"`;
+                        if (limit.lower != null) {
 
-                            limit += `lower="${ limits.lower }"`;
-
-                        }
-
-                        if (limits.upper != null) {
-
-                            limit += `upper="${ limits.upper }"`;
+                            limitNode += ` lower="${ limit.lower }"`;
 
                         }
 
-                        limit += ' />';
+                        if (limit.upper != null) {
 
-                        joint += limit;
+                            limitNode += ` upper="${ limit.upper }"`;
+
+                        }
+
+                        limitNode += ' ></limit>';
+
+                        console.log(limitNode)
+
+                        joint += limitNode;
 
                     }
 

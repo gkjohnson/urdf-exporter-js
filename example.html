@@ -3,17 +3,34 @@
 <head>
     <script src="./node_modules/three/build/three.min.js"></script>
     <script src="./node_modules/three/examples/js/loaders/STLLoader.js"></script>
+    <script src="./node_modules/three/examples/js/loaders/ColladaLoader.js"></script>
     <script src="./node_modules/three/examples/js/exporters/STLExporter.js"></script>
+    <script src="./node_modules/three/examples/js/controls/OrbitControls.js"></script>
     <script src="./node_modules/ply-exporter/PLYExporter.js"></script>
     <script src="./node_modules/urdf-loader/URDFLoader.js"></script>
+    <script src="./node_modules/urdf-loader/urdf-viewer-element.js"></script>
     <script src="./node_modules/jszip/dist/jszip.min.js"></script>
 
     <script type="text/javascript" src="./URDFExporter.js"></script>
 
     <title>URDF Exporter Example</title>
+
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        urdf-viewer {
+            background: #222;
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
 </head>
 <body>
-
+    <urdf-viewer up="+Z" display-shadow></urdf-viewer>
     <script src="./example.js"></script>
 </body>
 </html>

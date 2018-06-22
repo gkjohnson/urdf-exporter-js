@@ -34,7 +34,7 @@
     "jszip": "^3.1.5",
     "ply-exporter": "^1.0.0",
     "static-server": "^2.2.0",
-    "three": "^0.90.0",
-    "urdf-loader": "^0.1.1"
+    "three": "^0.93.0",
+    "urdf-loader": "^0.2.3"
   }
 }
