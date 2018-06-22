@@ -83,27 +83,29 @@ class URDFExporter {
 
     // Convert the urdf xml into a well-formatted, indented format
     _format(urdf) {
-        const IS_END_TAG = /^<\//;
-        const IS_SELF_CLOSING = /\/>$/;
-        const pad = (ch, num) => (num > 0 ? ch + pad(ch, num - 1) : '');
-        
-        let tagnum = 0;
+        var IS_END_TAG = /^<\//;
+        var IS_SELF_CLOSING = /(\?>$)|(\/>$)/;
+        var HAS_TEXT = /<[^>]+>[^<]*<\/[^<]+>/;
+
+        var pad = ( ch, num ) => ( num > 0 ? ch + pad( ch, num - 1 ) : '' );
+
+        var tagnum = 0;
         return urdf
-            .match(/<[^>]+>/g)
-            .map(tag => {
-                if (!IS_SELF_CLOSING.test(tag) && IS_END_TAG.test(tag)) {
+            .match( /(<[^>]+>[^<]+<\/[^<]+>)|(<[^>]+>)/g )
+            .map( tag => {
+                if ( ! HAS_TEXT.test( tag ) && ! IS_SELF_CLOSING.test( tag ) && IS_END_TAG.test( tag ) ) {
                     tagnum --;
                 }
 
-                const res = `${pad('  ', tagnum)}${tag}`;
-
-                if (!IS_SELF_CLOSING.test(tag) && !IS_END_TAG.test(tag)) {
+                var res = `${ pad( '  ', tagnum ) }${ tag }`;
+                if ( ! HAS_TEXT.test( tag ) && ! IS_SELF_CLOSING.test( tag ) && ! IS_END_TAG.test( tag ) ) {
                     tagnum ++;
+
                 }
 
                 return res;
             })
-            .join('\n');        
+            .join('\n');
     }
 
     // Remove any unnecessary joints and links that fixed and have identity transforms
