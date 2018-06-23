@@ -25,6 +25,12 @@ class URDFExporter {
 
     }
 
+    get ColladaExporter () {
+
+        return this._colladaExporter = this._colladaExporter || new THREE.ColladaExporter();
+
+    }
+
     // Makes the provided name unique.
     // 'map' is an object with keys of already taken names
     _makeNameUnique (name, map, appendNum = 0) {
@@ -44,15 +50,40 @@ class URDFExporter {
     }
 
     // The default callback for generating mesh data from a link
-    _defaultMeshCallback (o, linkName) {
+    _defaultMeshCallback (o, linkName, preferredExtension) {
 
-        // TODO: Include a DAE exporter
-        return {
-            name: linkName,
-            ext: 'stl',
-            data: this.STLExporter.parse(o, { binary: true }),
-            includesMaterials: false,
-        };
+        if (preferredExtension === 'dae') {
+
+            // TODO: dedupe the textures here
+            const res = this.ColladaExporter.parse(o);
+            res.textures.forEach((tex, i) => {
+
+                const newname = `${ linkName }-${ i }`;
+                const nameregex = new RegExp(`${ tex.name }\\.${ tex.ext }`, 'g');
+
+                res.data = res.data.replace(nameregex, `${ newname }.${ tex.ext }`);
+                tex.name = newname;
+
+            });
+
+            return {
+                name: linkName,
+                ext: 'dae',
+                data: res.data,
+                textures: res.textures,
+                includesMaterials: true,
+            };
+
+        } else {
+
+            return {
+                name: linkName,
+                ext: 'stl',
+                data: this.STLExporter.parse(o, { binary: true }),
+                includesMaterials: false,
+            };
+
+        }
 
     }
 
@@ -245,6 +276,7 @@ class URDFExporter {
         const meshfunc = options.createMesh || this._defaultMeshCallback.bind(this);
         const packageprefix = options.packagePrefix || 'package://';
         const collapse = options.collapse || false;
+        const meshExtension = options.meshExtension || 'dae';
 
         if (collapse) console.warn('The "collapse" functionality isn\'t stable and my corrupt the structure of the URDF');
 
@@ -271,15 +303,17 @@ class URDFExporter {
             // Create the link tag
             if (child instanceof THREE.Mesh && child.geometry) {
 
+                // TODO: This caching should be handled by the createMesh func, not here.
                 let meshInfo = meshesMap.get(child.geometry);
                 if (!meshInfo) {
 
                     // TODO: This isn't necessarily correct if two objects have
                     // the same geometry but different materials. This should
                     // create a hash based on the materials _and_ geometry
-                    meshInfo = meshfunc(child, linkName);
+                    meshInfo = meshfunc(child, linkName, meshExtension);
                     meshesMap.set(child.geometry, meshInfo);
                     meshes.push(meshInfo);
+                    textures.push(...meshInfo.textures);
 
                 }
 
@@ -337,6 +371,7 @@ class URDFExporter {
 
                     }
                     link += '</visual>';
+
                 }
 
                 // TODO: add matching collision
