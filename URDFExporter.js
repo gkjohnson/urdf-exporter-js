@@ -50,9 +50,19 @@ class URDFExporter {
     }
 
     // The default callback for generating mesh data from a link
-    _defaultMeshCallback (o, linkName, preferredExtension) {
+    _defaultMeshCallback (o, linkName, preferredFormat) {
 
-        if (preferredExtension === 'dae') {
+        if (preferredFormat === 'stl') {
+
+            return {
+                name: linkName,
+                ext: 'stl',
+                data: this.STLExporter.parse(o, { binary: true }),
+                textures: [],
+                includesMaterials: false,
+            };
+
+        } else {
 
             // TODO: dedupe the textures here
             const res = this.ColladaExporter.parse(o);
@@ -72,15 +82,6 @@ class URDFExporter {
                 data: res.data,
                 textures: res.textures,
                 includesMaterials: true,
-            };
-
-        } else {
-
-            return {
-                name: linkName,
-                ext: 'stl',
-                data: this.STLExporter.parse(o, { binary: true }),
-                includesMaterials: false,
             };
 
         }
@@ -276,7 +277,7 @@ class URDFExporter {
         const meshfunc = options.createMesh || this._defaultMeshCallback.bind(this);
         const packageprefix = options.packagePrefix || 'package://';
         const collapse = options.collapse || false;
-        const meshExtension = options.meshExtension || 'dae';
+        const meshFormat = options.meshFormat || 'dae';
 
         if (collapse) console.warn('The "collapse" functionality isn\'t stable and my corrupt the structure of the URDF');
 
@@ -310,10 +311,10 @@ class URDFExporter {
                     // TODO: This isn't necessarily correct if two objects have
                     // the same geometry but different materials. This should
                     // create a hash based on the materials _and_ geometry
-                    meshInfo = meshfunc(child, linkName, meshExtension);
+                    meshInfo = meshfunc(child, linkName, meshFormat);
                     meshesMap.set(child.geometry, meshInfo);
                     meshes.push(meshInfo);
-                    textures.push(...meshInfo.textures);
+                    if (meshInfo.textures) textures.push(...meshInfo.textures);
 
                 }
 

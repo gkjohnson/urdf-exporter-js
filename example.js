@@ -73,12 +73,17 @@ loader.load('./urdf', 'r2_description/robots/r2b.URDF', robot => {
 
             if (/urdf$/i.test(url)) return URL.createObjectURL(new Blob([data.urdf]));
 
-            const mesh = Object
-                .keys(data.meshes)
-                .filter(n => url.indexOf(data.meshes[ n ].name) !== -1)
+            const mesh = data.meshes
+                .filter(m => new RegExp(`${ m.name }\\.${ m.ext }$`).test(url))
                 .pop();
 
-            if (mesh != null) return URL.createObjectURL(new Blob([data.meshes[ mesh ].data]));
+            if (mesh != null) return URL.createObjectURL(new Blob([mesh.data]));
+
+            const tex = data.textures
+                .filter(t => new RegExp(`${ t.name }\\.${ t.ext }$`).test(url))
+                .pop();
+
+            if (tex != null) return URL.createObjectURL(new Blob([tex.data]));
 
             return url;
 
@@ -88,17 +93,17 @@ loader.load('./urdf', 'r2_description/robots/r2b.URDF', robot => {
         el.urdf = 'exported.urdf';
 
         // const zip = new JSZip();
-        // zip.file('T12.URDF', res.urdf);
+        // zip.file('T12.URDF', data.urdf);
 
         // const meshes = zip.folder('meshes');
-        // res.meshes.forEach(m => meshes.file(`${ m.name }.${ m.ext }`, m.data));
+        // data.meshes.forEach(m => meshes.file(`${ m.name }.${ m.ext }`, m.data));
 
         // const textures = zip.folder('images');
-        // res.textures.forEach(m => textures.file(`${ m.name }.${ m.ext }`, m.data));
+        // data.textures.forEach(m => textures.file(`${ m.name }.${ m.ext }`, m.data));
 
         // zip
         //     .generateAsync({ type: 'uint8array' })
-        //     // .then(zipdata => saveData(zipdata, 't12urdf.zip'));
+        //     .then(zipdata => saveData(zipdata, 't12urdf.zip'));
 
     }, 3000);
 

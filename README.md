@@ -10,22 +10,23 @@ Utility for exporting THREE.js object trees as a URDF file.
 // the joint to be generated for the associated link.
 // If not provided, `fixed` joint type is used.
 function jointFunc (obj, childName, parentName) {
-  if (obj.urdf) {
-      return {
-          name: obj.name + 'joint',
-          type: obj.urdf.type,
-          limits: {
-              lower: obj.urdf.min,
-              lower: obj.urdf.max,
-          }
-      };
-  }
-  return {};
+    if (obj.urdf) {
+        return {
+            name: obj.name,
+            type: obj.urdf.type,
+            axis: obj.urdf.axis || new THREE.Vector3(0, 0, 1),
+            limit: {
+                lower: obj.urdf.lower,
+                upper: obj.urdf.upper,
+            }
+        };
+    }
+    return {};
 }
 
 // Generate the URDF file and associate meshes and textures
 const exporter = new URDFExporter();
-const res = exporter.parse(robot, 'T12', jointFunc);
+const res = exporter.parse(robot, 'T12', jointFunc, { collapse: true });
 
 // Save out a zip using JSZip (https://stuk.github.io/jszip/)
 // with the file structure
@@ -77,13 +78,13 @@ A function used to define the attributes for a joint connecting a link to its pa
 ```js
 function joinfunc(object, childLinkName, parentLinkName) {
   return {
-  
+
     name: `${parentLinkName}2${childLinkName}`, // defaults to '_joint_<number>'
-    
+
     type: `revolute`,                 // defaults to 'fixed'
-    
+
     axis: new THREE.Vector3(1, 0, 0), // required for non-fixed joints
-    
+
     limits: {
       lower: -30,  // optional
       upper: 30,   // optional
