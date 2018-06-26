@@ -36,12 +36,8 @@ const res = exporter.parse(robot, 'T12', jointFunc, { collapse: true });
 // /textures/<texture>.<ext>
 const zip = new JSZip();
 zip.file('T12.URDF', res.urdf);
-
-const meshes = zip.folder('meshes');
-res.meshes.forEach(m => meshes.file(`${m.directory}${m.name}.${m.ext}`, m.data));
-
-const textures = zip.folder('images');
-res.textures.forEach(t => textures.file(${t.directory}`${t.name}.${t.ext}`, m.data));
+res.meshes.forEach(m => zip.file(`${ m.directory }${ m.name }.${ m.ext }`, m.data));
+res.textures.forEach(t => zip.file($ {t.directory }`${ t.name }.${ t.ext }`, m.data));
 
 zip
     .generateAsync({ type: 'uint8array' })
@@ -108,17 +104,17 @@ function createMesh(obj, linkName, preferredMeshFormat) {
   return {
       // File name
       name: linkName,
-      
+
       // File extension
       ext: 'dae',
-      
+
       // File content
       data: res.data,
-      
+
       // Array of texture data to save out. Object must
       // include name, ext, and data to write out.
       textures: res.textures,
-      
+
       // Whether or not the material information is captured by
       // the file so it can be excluded from the URDF
       includesMaterials: true

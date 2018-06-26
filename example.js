@@ -92,18 +92,14 @@ loader.load('./urdf', 'r2_description/robots/r2b.URDF', robot => {
         el.package = '/stub';
         el.urdf = 'exported.urdf';
 
-        // const zip = new JSZip();
-        // zip.file('T12.URDF', data.urdf);
+        const zip = new JSZip();
+        zip.file('T12.URDF', data.urdf);
+        data.meshes.forEach(m => zip.file(`${ m.directory }${ m.name }.${ m.ext }`, m.data));
+        data.textures.forEach(t => zip.file(`${ t.directory }${ t.name }.${ t.ext }`, t.data));
 
-        // const meshes = zip.folder('meshes');
-        // data.meshes.forEach(m => meshes.file(`${ m.name }.${ m.ext }`, m.data));
-
-        // const textures = zip.folder('images');
-        // data.textures.forEach(m => textures.file(`${ m.name }.${ m.ext }`, m.data));
-
-        // zip
-        //     .generateAsync({ type: 'uint8array' })
-        //     .then(zipdata => saveData(zipdata, 't12urdf.zip'));
+        zip
+            .generateAsync({ type: 'uint8array' })
+            // .then(zipdata => saveData(zipdata, 't12urdf.zip'));
 
     }, 3000);
 
