@@ -74,13 +74,13 @@ loader.load('./urdf', 'r2_description/robots/r2b.URDF', robot => {
             if (/urdf$/i.test(url)) return URL.createObjectURL(new Blob([data.urdf]));
 
             const mesh = data.meshes
-                .filter(m => new RegExp(`${ m.name }\\.${ m.ext }$`).test(url))
+                .filter(m => new RegExp(`${ m.directory }${ m.name }\\.${ m.ext }$`).test(url))
                 .pop();
 
             if (mesh != null) return URL.createObjectURL(new Blob([mesh.data]));
 
             const tex = data.textures
-                .filter(t => new RegExp(`${ t.name }\\.${ t.ext }$`).test(url))
+                .filter(t => new RegExp(`${ t.directory }${ t.name }\\.${ t.ext }$`).test(url))
                 .pop();
 
             if (tex != null) return URL.createObjectURL(new Blob([tex.data]));

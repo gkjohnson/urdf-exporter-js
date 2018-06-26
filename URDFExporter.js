@@ -59,13 +59,12 @@ class URDFExporter {
                 ext: 'stl',
                 data: this.STLExporter.parse(o, { binary: true }),
                 textures: [],
-                includesMaterials: false,
             };
 
         } else {
 
             // TODO: dedupe the textures here
-            const res = this.ColladaExporter.parse(o);
+            const res = this.ColladaExporter.parse(o, { textureDirectory: 'textures' });
             res.textures.forEach((tex, i) => {
 
                 const newname = `${ linkName }-${ i }`;
@@ -312,6 +311,19 @@ class URDFExporter {
                     // the same geometry but different materials. This should
                     // create a hash based on the materials _and_ geometry
                     meshInfo = meshfunc(child, linkName, meshFormat);
+
+                    // put the meshes in the `mesh` directory and the
+                    // textures in the same directory.
+                    meshInfo.directory = 'meshes/';
+                    meshInfo.textures.forEach(t => {
+
+                        t.directory =
+                            `${ meshInfo.directory }${ t.directory || '' }`
+                                .replace(/\\/g, '/')
+                                .replace(/\/+/g, '/');
+
+                    });
+
                     meshesMap.set(child.geometry, meshInfo);
                     meshes.push(meshInfo);
                     if (meshInfo.textures) textures.push(...meshInfo.textures);
@@ -328,7 +340,7 @@ class URDFExporter {
                         link += '<geometry>';
                         {
 
-                            const meshpath = this._normalizePackagePath(`${ packageprefix }/meshes/${ meshInfo.name }.${ meshInfo.ext }`);
+                            const meshpath = this._normalizePackagePath(`${ packageprefix }/${ meshInfo.directory }${ meshInfo.name }.${ meshInfo.ext }`);
                             link += `<mesh filename="${ meshpath }" scale="${ child.scale.toArray().join(' ') }" />`;
 
                         }
@@ -351,9 +363,11 @@ class URDFExporter {
 
                                         const ext = 'png';
                                         texInfo = {
+                                            directory: 'textures/',
                                             name: meshInfo.name,
                                             ext,
                                             data: this._imageToData(child.material.map.image, ext),
+                                            original: child.material.map,
                                         };
                                         texMap.set(child.material.map, texInfo);
                                         textures.push(texInfo);
