@@ -48,7 +48,7 @@ zip
     .then(zipdata => saveData(zipdata, 't12urdf.zip'));
 ```
 
-### URDFExporter.parse(object, robotname, jointfunc, meshfunc, packageprefix, collapse)
+### URDFExporter.parse(object, robotname, jointfunc, options = {})
 
 Processes the given `object` into a URDF file and assets. Returns an object of the form
 ```js
