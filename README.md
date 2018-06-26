@@ -38,10 +38,10 @@ const zip = new JSZip();
 zip.file('T12.URDF', res.urdf);
 
 const meshes = zip.folder('meshes');
-res.meshes.forEach(m => meshes.file(`${m.name}.${m.ext}`, m.data));
+res.meshes.forEach(m => meshes.file(`${m.directory}${m.name}.${m.ext}`, m.data));
 
 const textures = zip.folder('images');
-res.textures.forEach(m => textures.file(`${m.name}.${m.ext}`, m.data));
+res.textures.forEach(t => textures.file(${t.directory}`${t.name}.${t.ext}`, m.data));
 
 zip
     .generateAsync({ type: 'uint8array' })
@@ -54,8 +54,8 @@ Processes the given `object` into a URDF file and assets. Returns an object of t
 ```js
 {
   urdf: <string>,
-  meshes: [{ name, ext, data }, ...],
-  textures: [{ name, ext, data }, ...]
+  meshes: [{ directory, name, ext, data }, ...],
+  textures: [{ directory, name, ext, data }, ...]
 }
 ```
 
