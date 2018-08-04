@@ -1,10 +1,11 @@
+/* global URDFLoader URDFExporter URDFViewer THREE JSZip */
 // https://stackoverflow.com/questions/19327749/javascript-blob-filename-without-link
-var saveData = (function () {
+var saveData = (function() {
 
     var a = document.createElement('a');
     document.body.appendChild(a);
     a.style = 'display: none';
-    return function (data, fileName) {
+    return function(data, fileName) {
 
         var blob = new Blob([ data ], { type: 'octet/stream' }),
             url = window.URL.createObjectURL(blob);
@@ -22,6 +23,16 @@ const exporter = new URDFExporter();
 const loader = new URDFLoader();
 const el = document.querySelector('urdf-viewer');
 
+const imp = new THREE.GLTFLoader(el.loadingManager);
+el.urdfLoader.defaultMeshLoader = (path, ext, done) => {
+
+    imp.load(path, res => {
+        // done(new THREE.Mesh(res));
+        console.log(res);
+    });
+
+};
+
 loader.load('./urdf', 'r2_description/robots/r2b.URDF', robot => {
 
     // time out so the meshes have had time to load
@@ -35,7 +46,7 @@ loader.load('./urdf', 'r2_description/robots/r2b.URDF', robot => {
         // Function callback for defining the attributes for
         // the joint to be generated for the associated link.
         // If not provided, `fixed` joint type is used.
-        function jointFunc (obj, childName, parentName) {
+        function jointFunc(obj, childName, parentName) {
 
             if (obj.urdf) {
 
@@ -57,18 +68,18 @@ loader.load('./urdf', 'r2_description/robots/r2b.URDF', robot => {
         // Optional callback for generating a mesh for
         // a given link. If not provided, then an STL
         // exporter is used.
-        function createMesh (obj, linkName) {
+        function createMesh(obj, linkName) {
 
             return {
                 name: linkName,
                 ext: 'ply',
-                data: new THREE.PLYExporter().parse(obj),
-                includesMaterials: false,
+                data: new THREE.GLTFExporter().parse(obj),
+                textures: [],
             };
 
         }
 
-        const data = exporter.parse(robot, 'T12', jointFunc, { collapse: true });
+        const data = exporter.parse(robot, 'T12', jointFunc, { collapse: true, createMesh });
         el.loadingManager.setURLModifier(url => {
 
             if (/urdf$/i.test(url)) return URL.createObjectURL(new Blob([data.urdf]));
@@ -98,7 +109,7 @@ loader.load('./urdf', 'r2_description/robots/r2b.URDF', robot => {
         data.textures.forEach(t => zip.file(`${ t.directory }${ t.name }.${ t.ext }`, t.data));
 
         zip
-            .generateAsync({ type: 'uint8array' })
+            .generateAsync({ type: 'uint8array' });
             // .then(zipdata => saveData(zipdata, 't12urdf.zip'));
 
     }, 3000);

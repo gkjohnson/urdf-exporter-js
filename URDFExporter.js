@@ -19,13 +19,13 @@ class URDFExporter {
     //   data
     // }
 
-    get STLExporter () {
+    get STLExporter() {
 
         return this._stlExporter = this._stlExporter || new THREE.STLExporter();
 
     }
 
-    get ColladaExporter () {
+    get ColladaExporter() {
 
         return this._colladaExporter = this._colladaExporter || new THREE.ColladaExporter();
 
@@ -33,7 +33,7 @@ class URDFExporter {
 
     // Makes the provided name unique.
     // 'map' is an object with keys of already taken names
-    _makeNameUnique (name, map, appendNum = 0) {
+    _makeNameUnique(name, map, appendNum = 0) {
 
         const newName = `${ name }${ appendNum || '' }`;
         return newName in map ? this._makeNameUnique(name, map, appendNum + 1) : newName;
@@ -41,7 +41,7 @@ class URDFExporter {
     }
 
     // Fix duplicate slashes in a file path
-    _normalizePackagePath (path) {
+    _normalizePackagePath(path) {
 
         return path
             .replace(/[\\/]+/g, '/')
@@ -50,7 +50,7 @@ class URDFExporter {
     }
 
     // The default callback for generating mesh data from a link
-    _defaultMeshCallback (o, linkName, preferredFormat) {
+    _defaultMeshCallback(o, linkName, preferredFormat) {
 
         if (preferredFormat === 'stl') {
 
@@ -87,7 +87,7 @@ class URDFExporter {
 
     }
 
-    _base64ToBuffer (str) {
+    _base64ToBuffer(str) {
 
         const b = atob(str);
         const buf = new Uint8Array(b.length);
@@ -103,7 +103,7 @@ class URDFExporter {
     }
 
     // Convert a texture to png image data
-    _imageToData (image, ext) {
+    _imageToData(image, ext) {
 
         this._canvas = this._canvas || document.createElement('canvas');
         this._ctx = this._ctx || this._canvas.getContext('2d');
@@ -127,7 +127,7 @@ class URDFExporter {
     }
 
     // Convert the urdf xml into a well-formatted, indented format
-    _format (urdf) {
+    _format(urdf) {
 
         var IS_END_TAG = /^<\//;
         var IS_SELF_CLOSING = /(\?>$)|(\/>$)/;
@@ -161,7 +161,7 @@ class URDFExporter {
     }
 
     // Remove any unnecessary joints and links that fixed and have identity transforms
-    _collapseLinks (urdf) {
+    _collapseLinks(urdf) {
 
         const xmlDoc = (new DOMParser()).parseFromString(urdf, 'text/xml');
         const robottag = xmlDoc.children[0];
@@ -271,7 +271,7 @@ class URDFExporter {
 
     // Convert the object into a urdf and get the associated
     // mesh and texture data
-    parse (object, robotname, jointfunc, options = {}) {
+    parse(object, robotname, jointfunc, options = {}) {
 
         const meshfunc = options.createMesh || this._defaultMeshCallback.bind(this);
         const packageprefix = options.packagePrefix || 'package://';
@@ -287,8 +287,8 @@ class URDFExporter {
         const textures = []; // array of texture info to save
 
         // used link and joint names
-        let linksNameMap = {};
-        let jointsNameMap = {};
+        const linksNameMap = {};
+        const jointsNameMap = {};
 
         let urdf = `<robot name="${ robotname }">`;
         object.traverse(child => {
