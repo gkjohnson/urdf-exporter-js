@@ -1,10 +1,10 @@
 {
   "name": "urdf-exporter",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "THREE.js utility for exporting object trees as a URDF file",
   "main": "URDFExporter.js",
   "files": [
-      "URDFExporter.js"
+    "URDFExporter.js"
   ],
   "scripts": {
     "start": "static-server",
