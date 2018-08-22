@@ -286,7 +286,6 @@ class URDFExporter {
         if (options.collapse) console.warn('The "collapse" functionality isn\'t stable and my corrupt the structure of the URDF');
 
         const linksMap = new WeakMap(); // object > name
-        const meshesMap = new WeakMap(); // geometry > mesh data
         const texMap = new WeakMap(); // texture > image data
         const meshes = []; // array of meshes info to save
         const textures = []; // array of texture info to save
@@ -306,29 +305,34 @@ class URDFExporter {
             let link = `<link name="${ linkName }">`;
 
             // Create the link tag
-            if (child instanceof THREE.Mesh && child.geometry) {
+            if (child instanceof THREE.Mesh) {
 
                 // TODO: Some deduping should be happening here
                 // Issue #9
                 const meshInfo = options.meshfunc(child, linkName, options.meshFormat);
 
-                // put the meshes in the `mesh` directory and the
-                // textures in the same directory.
-                meshInfo.directory = 'meshes/';
-                meshInfo.textures.forEach(t => {
-
-                    t.directory =
-                        `${ meshInfo.directory }${ t.directory || '' }`
-                            .replace(/\\/g, '/')
-                            .replace(/\/+/g, '/');
-
-                });
-
-                meshes.push(meshInfo);
-                if (meshInfo.textures) textures.push(...meshInfo.textures);
-
                 if (meshInfo != null) {
 
+                    // put the meshes in the `mesh` directory and the
+                    // textures in the same directory.
+                    meshInfo.directory = 'meshes/';
+                    meshInfo.textures.forEach(t => {
+
+                        t.directory =
+                            `${ meshInfo.directory }${ t.directory || '' }`
+                                .replace(/\\/g, '/')
+                                .replace(/\/+/g, '/');
+
+                    });
+
+                    meshes.push(meshInfo);
+                    if (meshInfo.textures) {
+
+                        textures.push(...meshInfo.textures);
+
+                    }
+
+                    // Create the visual node based on the meshInfo
                     link += '<visual>';
                     {
 
