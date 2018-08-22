@@ -308,6 +308,69 @@ class URDFExporter {
             let joint = '';
             let link = `<link name="${ linkName }">`;
 
+            // Create the joint tag if it's not the root object that we're exporting
+            if (child !== object) {
+
+                const parentName = linksMap.get(child.parent);
+                const jointInfo = jointfunc(child, linkName, parentName) || {};
+                const { axis, type, name, limit } = jointInfo;
+
+                const jointName = this._makeNameUnique(name || '_joint_', jointsNameMap);
+                jointsNameMap[jointName] = true;
+
+                joint = `<joint name="${ jointName }" type="${ type || 'fixed' }">`;
+                {
+
+                    const pos = child.position.toArray().join(' ');
+
+                    // URDF uses fixed-axis rotations, while THREE uses moving-axis rotations
+                    const euler = child.rotation.clone();
+                    euler.reorder('ZYX');
+
+                    // The last field of the array is the rotation order 'ZYX', so
+                    // remove that before saving
+                    const array = euler.toArray();
+                    array.pop();
+
+                    const rot = euler.toArray().join(' ');
+
+                    joint += `<origin xyz="${ pos }" rpy="${ rot }" />`;
+
+                    joint += `<parent link="${ parentName }" />`;
+
+                    joint += `<child link="${ linkName }" />`;
+
+                    if (axis) {
+
+                        joint += `<axis xyz="${ axis.x } ${ axis.y } ${ axis.z }" />`;
+
+                    }
+
+                    if (limit) {
+
+                        let limitNode = `<limit velocity="${ limit.velocity || 0 }" effort="${ limit.effort || 0 }"`;
+                        if (limit.lower != null) {
+
+                            limitNode += ` lower="${ limit.lower }"`;
+
+                        }
+
+                        if (limit.upper != null) {
+
+                            limitNode += ` upper="${ limit.upper }"`;
+
+                        }
+
+                        limitNode += ' ></limit>';
+                        joint += limitNode;
+
+                    }
+
+                }
+                joint += '</joint>';
+
+            }
+
             // Create the link tag
             if (child instanceof THREE.Mesh) {
 
@@ -399,69 +462,6 @@ class URDFExporter {
             }
 
             link += '</link>';
-
-            // Create the joint tag
-            if (child !== object) {
-
-                const parentName = linksMap.get(child.parent);
-                const jointInfo = jointfunc(child, linkName, parentName) || {};
-                const { axis, type, name, limit } = jointInfo;
-
-                const jointName = this._makeNameUnique(name || '_joint_', jointsNameMap);
-                jointsNameMap[jointName] = true;
-
-                joint = `<joint name="${ jointName }" type="${ type || 'fixed' }">`;
-                {
-
-                    const pos = child.position.toArray().join(' ');
-
-                    // URDF uses fixed-axis rotations, while THREE uses moving-axis rotations
-                    const euler = child.rotation.clone();
-                    euler.reorder('ZYX');
-
-                    // The last field of the array is the rotation order 'ZYX', so
-                    // remove that before saving
-                    const array = euler.toArray();
-                    array.pop();
-
-                    const rot = euler.toArray().join(' ');
-
-                    joint += `<origin xyz="${ pos }" rpy="${ rot }" />`;
-
-                    joint += `<parent link="${ parentName }" />`;
-
-                    joint += `<child link="${ linkName }" />`;
-
-                    if (axis) {
-
-                        joint += `<axis xyz="${ axis.x } ${ axis.y } ${ axis.z }" />`;
-
-                    }
-
-                    if (limit) {
-
-                        let limitNode = `<limit velocity="${ limit.velocity || 0 }" effort="${ limit.effort || 0 }"`;
-                        if (limit.lower != null) {
-
-                            limitNode += ` lower="${ limit.lower }"`;
-
-                        }
-
-                        if (limit.upper != null) {
-
-                            limitNode += ` upper="${ limit.upper }"`;
-
-                        }
-
-                        limitNode += ' ></limit>';
-                        joint += limitNode;
-
-                    }
-
-                }
-                joint += '</joint>';
-
-            }
 
             urdf += link;
             urdf += joint;
