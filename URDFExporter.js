@@ -271,14 +271,19 @@ class URDFExporter {
 
     // Convert the object into a urdf and get the associated
     // mesh and texture data
-    parse(object, robotname, jointfunc, options = {}) {
+    parse(object, jointfunc, options = {}) {
 
-        const meshfunc = options.createMesh || this._defaultMeshCallback.bind(this);
-        const packageprefix = options.packagePrefix || 'package://';
-        const collapse = options.collapse || false;
-        const meshFormat = options.meshFormat || 'dae';
+        options = Object.assign({
 
-        if (collapse) console.warn('The "collapse" functionality isn\'t stable and my corrupt the structure of the URDF');
+            meshfunc: this._defaultMeshCallback.bind(this),
+            packagePrefix: 'package://',
+            collapse: false,
+            meshFormat: 'dae',
+            robotName: object.name,
+
+        }, options);
+
+        if (options.collapse) console.warn('The "collapse" functionality isn\'t stable and my corrupt the structure of the URDF');
 
         const linksMap = new WeakMap(); // object > name
         const meshesMap = new WeakMap(); // geometry > mesh data
@@ -290,7 +295,7 @@ class URDFExporter {
         const linksNameMap = {};
         const jointsNameMap = {};
 
-        let urdf = `<robot name="${ robotname }">`;
+        let urdf = `<robot name="${ options.robotName }">`;
         object.traverse(child => {
 
             const linkName = this._makeNameUnique(child.name || `_link_`, linksNameMap);
@@ -310,7 +315,7 @@ class URDFExporter {
                     // TODO: This isn't necessarily correct if two objects have
                     // the same geometry but different materials. This should
                     // create a hash based on the materials _and_ geometry
-                    meshInfo = meshfunc(child, linkName, meshFormat);
+                    meshInfo = options.meshfunc(child, linkName, options.meshFormat);
 
                     // put the meshes in the `mesh` directory and the
                     // textures in the same directory.
@@ -340,7 +345,7 @@ class URDFExporter {
                         link += '<geometry>';
                         {
 
-                            const meshpath = this._normalizePackagePath(`${ packageprefix }/${ meshInfo.directory }${ meshInfo.name }.${ meshInfo.ext }`);
+                            const meshpath = this._normalizePackagePath(`${ options.packageprefix }/${ meshInfo.directory }${ meshInfo.name }.${ meshInfo.ext }`);
                             link += `<mesh filename="${ meshpath }" scale="${ child.scale.toArray().join(' ') }" />`;
 
                         }
@@ -374,7 +379,7 @@ class URDFExporter {
 
                                     }
 
-                                    const texpath = this._normalizePackagePath(`${ packageprefix }/textures/${ texInfo.name }.${ texInfo.ext }`);
+                                    const texpath = this._normalizePackagePath(`${ options.packageprefix }/textures/${ texInfo.name }.${ texInfo.ext }`);
                                     link += `<texture filename="${ texpath }" />`;
 
                                 }
@@ -413,6 +418,12 @@ class URDFExporter {
                     // URDF uses fixed-axis rotations, while THREE uses moving-axis rotations
                     const euler = child.rotation.clone();
                     euler.reorder('ZYX');
+
+                    // The last field of the array is the rotation order 'ZYX', so
+                    // remove that before saving
+                    const array = euler.toArray();
+                    array.pop();
+
                     const rot = euler.toArray().join(' ');
 
                     joint += `<origin xyz="${ pos }" rpy="${ rot }" />`;
@@ -460,7 +471,7 @@ class URDFExporter {
         urdf += '</robot>';
 
         // format the final output
-        const finalurdf = this._format(collapse ? this._collapseLinks(urdf) : urdf);
+        const finalurdf = this._format(options.collapse ? this._collapseLinks(urdf) : urdf);
 
         return { urdf: finalurdf, meshes, textures };
 
