@@ -294,8 +294,12 @@ class URDFExporter {
         const linksNameMap = {};
         const jointsNameMap = {};
 
+        // file contents
         let urdf = `<robot name="${ options.robotName }">`;
-        object.traverse(child => {
+
+        // use a custom travers function instead of Object3D.traverse so we
+        // can stop the traversal early if we have to.
+        function traverse(child) {
 
             const linkName = this._makeNameUnique(child.name || `_link_`, linksNameMap);
             linksNameMap[linkName] = true;
@@ -462,7 +466,13 @@ class URDFExporter {
             urdf += link;
             urdf += joint;
 
-        });
+            // traverse all the children
+            child.children.forEach(c => traverse(c));
+
+        };
+
+        // traverse the object
+        traverse(object);
 
         urdf += '</robot>';
 
