@@ -276,7 +276,7 @@ class URDFExporter {
         options = Object.assign({
 
             meshfunc: this._defaultMeshCallback.bind(this),
-            packagePrefix: 'package://',
+            pathPrefix: './',
             collapse: false,
             meshFormat: 'dae',
             robotName: object.name,
@@ -345,7 +345,7 @@ class URDFExporter {
                         link += '<geometry>';
                         {
 
-                            const meshpath = this._normalizePackagePath(`${ options.packageprefix }/${ meshInfo.directory }${ meshInfo.name }.${ meshInfo.ext }`);
+                            const meshpath = this._normalizePackagePath(`${ options.packageprefix }${ meshInfo.directory }${ meshInfo.name }.${ meshInfo.ext }`);
                             link += `<mesh filename="${ meshpath }" scale="${ child.scale.toArray().join(' ') }" />`;
 
                         }
@@ -379,7 +379,7 @@ class URDFExporter {
 
                                     }
 
-                                    const texpath = this._normalizePackagePath(`${ options.packageprefix }/textures/${ texInfo.name }.${ texInfo.ext }`);
+                                    const texpath = this._normalizePackagePath(`${ options.packageprefix }textures/${ texInfo.name }.${ texInfo.ext }`);
                                     link += `<texture filename="${ texpath }" />`;
 
                                 }

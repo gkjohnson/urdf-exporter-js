@@ -118,10 +118,12 @@ function createMesh(obj, linkName, preferredMeshFormat) {
 }
 ```
 
-##### packagePrefix
+##### pathPrefix
 _optional_
 
-The prefix to prepend to all file paths. Defaults to `package://`.
+The prefix to prepend to all file paths for meshes and textures. Defaults to `./`.
+
+This could be set to a ROS package URI, such as `package://robot-name/`.
 
 ##### collapse
 _optional_

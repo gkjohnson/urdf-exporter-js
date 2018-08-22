@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - Moved `robotName` from an option in the `parse` function to an option.
 
+### Added
+- `pathPrefix` option.
+
+### Removed
+- `packagePrefix` option.
+
 ### Fixed
 - The euler order at the end of a rotation.
 
