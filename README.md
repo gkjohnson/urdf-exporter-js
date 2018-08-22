@@ -27,7 +27,7 @@ function jointFunc (obj, childName, parentName) {
 
 // Generate the URDF file and associate meshes and textures
 const exporter = new URDFExporter();
-const res = exporter.parse(robot, 'T12', jointFunc, { collapse: true });
+const res = exporter.parse(robot, jointFunc, { collapse: true, robotName: 'T12' });
 
 // Save out a zip using JSZip (https://stuk.github.io/jszip/)
 // with the file structure
