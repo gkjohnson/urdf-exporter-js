@@ -308,32 +308,24 @@ class URDFExporter {
             // Create the link tag
             if (child instanceof THREE.Mesh && child.geometry) {
 
-                // TODO: This caching should be handled by the createMesh func, not here.
-                let meshInfo = meshesMap.get(child.geometry);
-                if (!meshInfo) {
+                // TODO: Some deduping should be happening here
+                // Issue #9
+                const meshInfo = options.meshfunc(child, linkName, options.meshFormat);
 
-                    // TODO: This isn't necessarily correct if two objects have
-                    // the same geometry but different materials. This should
-                    // create a hash based on the materials _and_ geometry
-                    meshInfo = options.meshfunc(child, linkName, options.meshFormat);
+                // put the meshes in the `mesh` directory and the
+                // textures in the same directory.
+                meshInfo.directory = 'meshes/';
+                meshInfo.textures.forEach(t => {
 
-                    // put the meshes in the `mesh` directory and the
-                    // textures in the same directory.
-                    meshInfo.directory = 'meshes/';
-                    meshInfo.textures.forEach(t => {
+                    t.directory =
+                        `${ meshInfo.directory }${ t.directory || '' }`
+                            .replace(/\\/g, '/')
+                            .replace(/\/+/g, '/');
 
-                        t.directory =
-                            `${ meshInfo.directory }${ t.directory || '' }`
-                                .replace(/\\/g, '/')
-                                .replace(/\/+/g, '/');
+                });
 
-                    });
-
-                    meshesMap.set(child.geometry, meshInfo);
-                    meshes.push(meshInfo);
-                    if (meshInfo.textures) textures.push(...meshInfo.textures);
-
-                }
+                meshes.push(meshInfo);
+                if (meshInfo.textures) textures.push(...meshInfo.textures);
 
                 if (meshInfo != null) {
 
