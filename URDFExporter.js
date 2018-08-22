@@ -52,7 +52,6 @@ class URDFExporter {
     // The default callback for generating mesh data from a link
     _defaultMeshCallback(o, linkName, preferredFormat) {
 
-        console.log("HERE");
         if (preferredFormat === 'stl') {
 
             return {
@@ -413,7 +412,7 @@ class URDFExporter {
                         link += '<geometry>';
                         {
 
-                            const meshpath = this._normalizePackagePath(`${ options.packageprefix }${ meshInfo.directory }${ meshInfo.name }.${ meshInfo.ext }`);
+                            const meshpath = this._normalizePackagePath(`${ options.pathPrefix }${ meshInfo.directory }${ meshInfo.name }.${ meshInfo.ext }`);
                             link += `<mesh filename="${ meshpath }" scale="${ child.scale.toArray().join(' ') }" />`;
 
                         }
@@ -450,7 +449,7 @@ class URDFExporter {
 
                                     }
 
-                                    const texpath = this._normalizePackagePath(`${ options.packageprefix }textures/${ texInfo.name }.${ texInfo.ext }`);
+                                    const texpath = this._normalizePackagePath(`${ options.pathPrefix }textures/${ texInfo.name }.${ texInfo.ext }`);
                                     link += `<texture filename="${ texpath }" />`;
 
                                 }
