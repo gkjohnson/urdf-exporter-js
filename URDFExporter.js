@@ -306,7 +306,7 @@ class URDFExporter {
             linksMap.set(child, linkName);
 
             let joint = '';
-            let link = `<link name="${ linkName }">`;
+            let isLeaf = false;
 
             // Create the joint tag if it's not the root object that we're exporting
             if (child !== object) {
@@ -314,6 +314,7 @@ class URDFExporter {
                 const parentName = linksMap.get(child.parent);
                 const jointInfo = jointfunc(child, linkName, parentName) || {};
                 const { axis, type, name, limit } = jointInfo;
+                isLeaf = !!jointInfo.isLeaf;
 
                 const jointName = this._makeNameUnique(name || '_joint_', jointsNameMap);
                 jointsNameMap[jointName] = true;
@@ -372,7 +373,11 @@ class URDFExporter {
             }
 
             // Create the link tag
-            if (child instanceof THREE.Mesh) {
+            let link = `<link name="${ linkName }">`;
+
+            // Try to add a mesh if this node is a mesh or the current
+            // link should be considered a leaf and traversal is stopped
+            if (child instanceof THREE.Mesh || isLeaf) {
 
                 // TODO: Some deduping should be happening here
                 // Issue #9
@@ -414,6 +419,9 @@ class URDFExporter {
                         }
                         link += '</geometry>';
 
+                        // TODO: It would be best if this info were provided via the
+                        // mesh generation function
+                        // Issue #18
                         if (!meshInfo.includesMaterials && child.material && !Array.isArray(child.material)) {
 
                             link += '<material name="">';
@@ -466,8 +474,13 @@ class URDFExporter {
             urdf += link;
             urdf += joint;
 
-            // traverse all the children
-            child.children.forEach(c => traverse(c));
+            // traverse all the children if this link
+            // isn't considered a leaf
+            if (!isLeaf) {
+
+                child.children.forEach(c => traverse(c));
+
+            }
 
         };
 

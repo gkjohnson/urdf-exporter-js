@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - `pathPrefix` option.
 - Ability to return `null` from `meshFunc` to indicate no visual node.
+- `isLeaf` value from jointFunc to indicate that traversal should stop.
 
 ### Removed
 - `packagePrefix` option.
