@@ -52,6 +52,7 @@ class URDFExporter {
     // The default callback for generating mesh data from a link
     _defaultMeshCallback(o, linkName, preferredFormat) {
 
+        console.log("HERE");
         if (preferredFormat === 'stl') {
 
             return {
@@ -275,7 +276,7 @@ class URDFExporter {
 
         options = Object.assign({
 
-            meshfunc: this._defaultMeshCallback.bind(this),
+            createMeshCb: this._defaultMeshCallback.bind(this),
             pathPrefix: './',
             collapse: false,
             meshFormat: 'dae',
@@ -299,13 +300,15 @@ class URDFExporter {
 
         // use a custom travers function instead of Object3D.traverse so we
         // can stop the traversal early if we have to.
-        function traverse(child) {
+        const traverse = child => {
 
             const linkName = this._makeNameUnique(child.name || `_link_`, linksNameMap);
             linksNameMap[linkName] = true;
             linksMap.set(child, linkName);
 
+            // Create the link tag
             let joint = '';
+            let link = `<link name="${ linkName }">`;
             let isLeaf = false;
 
             // Create the joint tag if it's not the root object that we're exporting
@@ -372,16 +375,13 @@ class URDFExporter {
 
             }
 
-            // Create the link tag
-            let link = `<link name="${ linkName }">`;
-
             // Try to add a mesh if this node is a mesh or the current
             // link should be considered a leaf and traversal is stopped
             if (child instanceof THREE.Mesh || isLeaf) {
 
                 // TODO: Some deduping should be happening here
                 // Issue #9
-                const meshInfo = options.meshfunc(child, linkName, options.meshFormat);
+                const meshInfo = options.createMeshCb(child, linkName, options.meshFormat);
 
                 if (meshInfo != null) {
 
