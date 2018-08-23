@@ -544,6 +544,10 @@ describe('URDFExporter', () => {
 
         });
 
+        it.skip('should modify the directory of textures included with the exported meshes', () => {});
+
+        it.skip('should include material properties and textures when `includesMaterials` is `false`', () => {});
+
     });
 
 });
