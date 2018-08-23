@@ -109,8 +109,8 @@ loader.load('./urdf', 'r2_description/robots/r2b.URDF', robot => {
         data.textures.forEach(t => zip.file(`${ t.directory }${ t.name }.${ t.ext }`, t.data));
 
         zip
-            .generateAsync({ type: 'uint8array' });
-            // .then(zipdata => saveData(zipdata, 't12urdf.zip'));
+            .generateAsync({ type: 'uint8array' })
+            .then(zipdata => saveData(zipdata, 't12urdf.zip'));
 
     }, 3000);
 

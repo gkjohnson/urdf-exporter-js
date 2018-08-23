@@ -8,7 +8,8 @@
   ],
   "scripts": {
     "start": "static-server",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "lint": "eslint *.js"
   },
   "repository": {
     "type": "git",
@@ -34,11 +35,13 @@
     "robots"
   ],
   "devDependencies": {
-    "collada-exporter": "^0.1.4",
+    "eslint": "^5.4.0",
+    "jest": "^23.5.0",
+    "jest-cli": "^23.5.0",
     "jszip": "^3.1.5",
-    "ply-exporter": "^1.0.0",
+    "puppeteer": "^1.7.0",
     "static-server": "^2.2.0",
-    "three": "^0.93.0",
-    "urdf-loader": "^0.2.3"
+    "three": "^0.95.0",
+    "urdf-loader": "^0.2.6"
   }
 }
