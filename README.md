@@ -1,6 +1,7 @@
 # urdf-exporter-js
 
 [![npm version](https://img.shields.io/npm/v/urdf-exporter.svg?style=flat-square)](https://www.npmjs.com/package/urdf-exporter)
+[![travis build](https://img.shields.io/travis/gkjohnson/urdf-exporter-js.svg?style=flat-square)](https://travis-ci.org/gkjohnson/urdf-exporter-js)
 [![lgtm code quality](https://img.shields.io/lgtm/grade/javascript/g/gkjohnson/urdf-exporter-js.svg?style=flat-square&label=code-quality)](https://lgtm.com/projects/g/gkjohnson/urdf-exporter-js/)
 
 Utility for exporting THREE.js object trees as a URDF file.
