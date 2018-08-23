@@ -13,9 +13,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `pathPrefix` option.
 - Ability to return `null` from `meshFunc` to indicate no visual node.
 - `isLeaf` value from jointFunc to indicate that traversal should stop.
+- Added return value from the mesh creation function to define material attributes.
 
 ### Removed
 - `packagePrefix` option.
+- `includeMaterials` field from createMeshCb function.
 
 ### Fixed
 - The euler order at the end of a rotation.

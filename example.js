@@ -23,17 +23,7 @@ const exporter = new URDFExporter();
 const loader = new URDFLoader();
 const el = document.querySelector('urdf-viewer');
 
-const imp = new THREE.GLTFLoader(el.loadingManager);
-el.urdfLoader.defaultMeshLoader = (path, ext, done) => {
-
-    imp.load(path, res => {
-        // done(new THREE.Mesh(res));
-        console.log(res);
-    });
-
-};
-
-loader.load('./urdf', 'r2_description/robots/r2b.URDF', robot => {
+loader.load('./urdf/r2_description/robots/r2b.URDF', './urdf', robot => {
 
     // time out so the meshes have had time to load
     // we should have an event on the parser for when all
@@ -48,15 +38,15 @@ loader.load('./urdf', 'r2_description/robots/r2b.URDF', robot => {
         // If not provided, `fixed` joint type is used.
         function jointFunc(obj, childName, parentName) {
 
-            if (obj.urdf) {
+            if (obj.isURDFJoint) {
 
                 return {
                     name: obj.name,
-                    type: obj.urdf.type,
-                    axis: obj.urdf.axis || new THREE.Vector3(0, 0, 1),
-                    limit: obj.urdf.limits ? {
-                        lower: obj.urdf.limits.lower,
-                        upper: obj.urdf.limits.upper,
+                    type: obj.jointType,
+                    axis: obj.axis || new THREE.Vector3(0, 0, 1),
+                    limit: obj.limit ? {
+                        lower: obj.limit.lower,
+                        upper: obj.limit.upper,
                     } : null,
                 };
 
@@ -68,21 +58,21 @@ loader.load('./urdf', 'r2_description/robots/r2b.URDF', robot => {
         // Optional callback for generating a mesh for
         // a given link. If not provided, then an STL
         // exporter is used.
-        function createMesh(obj, linkName) {
+        function createMeshCb(obj, linkName) {
 
             return {
                 name: linkName,
-                ext: 'ply',
-                data: new THREE.GLTFExporter().parse(obj),
+                ext: 'stl',
+                data: new THREE.STLExporter().parse(obj),
                 textures: [],
             };
 
         }
 
-        const data = exporter.parse(robot, 'T12', jointFunc, { collapse: true, createMesh });
+        const data = exporter.parse(robot, jointFunc, { collapse: true, createMeshCb });
         el.loadingManager.setURLModifier(url => {
 
-            if (/urdf$/i.test(url)) return URL.createObjectURL(new Blob([data.urdf]));
+            if (/urdf$/i.test(url)) return URL.createObjectURL(new Blob([data.data]));
 
             const mesh = data.meshes
                 .filter(m => new RegExp(`${ m.directory }${ m.name }\\.${ m.ext }$`).test(url))
@@ -100,7 +90,6 @@ loader.load('./urdf', 'r2_description/robots/r2b.URDF', robot => {
 
         });
 
-        el.package = '/stub';
         el.urdf = 'exported.urdf';
 
         const zip = new JSZip();

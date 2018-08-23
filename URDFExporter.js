@@ -432,22 +432,21 @@ class URDFExporter {
                         }
                         link += '</geometry>';
 
-                        // TODO: It would be best if this info were provided via the
-                        // mesh generation function
-                        // Issue #18
-                        if (!meshInfo.includesMaterials && child.material && !Array.isArray(child.material)) {
+                        if (meshInfo.material) {
 
                             link += '<material name="">';
                             {
 
-                                const col = child.material.color;
-                                const rgba = `${ col.r } ${ col.g } ${ col.b } 1`;
+                                if (meshInfo.material.color) {
+                                    const col = child.material.color;
+                                    const rgba = `${ col.r } ${ col.g } ${ col.b } 1`;
 
-                                link += `<color rgba="${ rgba }" />`;
+                                    link += `<color rgba="${ rgba }" />`;
+                                }
 
-                                if (child.map) {
+                                if (meshInfo.material.texture) {
 
-                                    let texInfo = texMap.get(child.material.map);
+                                    let texInfo = texMap.get(meshInfo.material.texture);
                                     if (!texInfo) {
 
                                         const ext = 'png';
@@ -455,10 +454,10 @@ class URDFExporter {
                                             directory: 'textures/',
                                             name: meshInfo.name,
                                             ext,
-                                            data: this._imageToData(child.material.map.image, ext),
-                                            original: child.material.map,
+                                            data: this._imageToData(meshInfo.material.texture.image, ext),
+                                            original: meshInfo.material.texture,
                                         };
-                                        texMap.set(child.material.map, texInfo);
+                                        texMap.set(meshInfo.material.texture, texInfo);
                                         textures.push(texInfo);
 
                                     }

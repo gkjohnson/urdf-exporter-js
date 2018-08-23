@@ -15,11 +15,11 @@ function jointFunc (obj, childName, parentName) {
     if (obj.urdf) {
         return {
             name: obj.name,
-            type: obj.urdf.type,
-            axis: obj.urdf.axis || new THREE.Vector3(0, 0, 1),
+            type: obj.jointType,
+            axis: obj.axis || new THREE.Vector3(0, 0, 1),
             limit: {
-                lower: obj.urdf.lower,
-                upper: obj.urdf.upper,
+                lower: obj.limit.lower,
+                upper: obj.limit.upper,
             },
             isLeaf: false
         };
@@ -125,9 +125,16 @@ function createMesh(obj, linkName, meshFormat) {
       // include name, ext, and data to write out.
       textures: res.textures,
 
-      // Whether or not the material information is captured by
-      // the file so it can be excluded from the URDF
-      includesMaterials: true
+      // The material information to include. Material
+      // is excluded if this is not defined.
+      // This is not needed for mesh files that include
+      // material information.
+      material: {
+
+          color: obj.material.color,
+          texture: obj.material.map
+
+      }
   }
 }
 ```
