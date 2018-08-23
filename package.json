@@ -49,6 +49,6 @@
     "puppeteer-to-istanbul": "^1.2.2",
     "static-server": "^2.2.0",
     "three": "^0.95.0",
-    "urdf-loader": "^0.2.6"
+    "urdf-loader": "^0.4.2"
   }
 }

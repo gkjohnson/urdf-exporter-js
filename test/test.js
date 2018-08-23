@@ -1,6 +1,6 @@
 /* global
     THREE URDFLoader URDFExporter
-    describe it beforeAll afterAll beforeEach afterEach expect
+    describe it beforeAll afterAll expect
 */
 const puppeteer = require('puppeteer');
 const pti = require('puppeteer-to-istanbul');
@@ -17,9 +17,15 @@ beforeAll(async() => {
         args: ['--no-sandbox'],
     });
     page = await browser.newPage();
+    await page.addScriptTag({ path: path.join(__dirname, '../node_modules/three/build/three.min.js') });
+    await page.addScriptTag({ path: path.join(__dirname, '../node_modules/three/examples/js/exporters/STLExporter.js') });
+    await page.addScriptTag({ path: path.join(__dirname, '../node_modules/three/examples/js/exporters/ColladaExporter.js') });
+    await page.addScriptTag({ path: path.join(__dirname, '../node_modules/three/examples/js/loaders/STLLoader.js') });
+    await page.addScriptTag({ path: path.join(__dirname, '../node_modules/three/examples/js/loaders/ColladaLoader.js') });
+    await page.addScriptTag({ path: path.join(__dirname, '../node_modules/urdf-loader/URDFLoader.js') });
+    await page.addScriptTag({ path: path.join(__dirname, '../URDFExporter.js') });
 
     await page.coverage.startJSCoverage();
-    await page.goto(`file:${ path.join(__dirname, './test-setup.html') }`);
 
     page.on('error', e => { throw new Error(e); });
     page.on('pageerror', e => { throw new Error(e); });
@@ -36,6 +42,7 @@ beforeAll(async() => {
 });
 
 describe('URDFExporter', () => {
+
     describe('Options', () => {
 
         describe('robotName', () => {
@@ -315,11 +322,227 @@ describe('URDFExporter', () => {
 
     describe('parse', () => {
 
-        it.skip('should export the correct amount of links and joints', () => {});
+        beforeAll(async() => {
 
-        it.skip('should export joints with the correct names and attributes', () => {});
+            await page.evaluate(() => {
 
-        it.skip('should be loadable by the URDFLoader', () => {});
+                window.parseURDF = function(exportedURDF) {
+
+                    return new Promise(resolve => {
+
+                        function simplifyHierarchy(obj) {
+
+                            const simple = {};
+                            simple.type = obj.type;
+                            simple.name = obj.name;
+                            simple.axis = obj.axis ? obj.axis.toArray() : null;
+                            simple.jointType = obj.jointType || null;
+                            simple.limit = obj.limit || null;
+                            simple.children = obj.children.map(c => simplifyHierarchy(c));
+
+                            return simple;
+
+                        }
+
+                        const loader = new URDFLoader();
+                        const colladaLoader = new THREE.ColladaLoader();
+                        loader.parse(exportedURDF.data, '', r => {
+
+                            requestAnimationFrame(() => resolve(simplifyHierarchy(r)));
+
+                        }, {
+                            loadMeshCb: (path, ext, done) => {
+
+                                const data = exportedURDF.meshes.filter(d => path.indexOf(`${ d.directory }${ d.name }.${ d.ext }`) !== -1)[0];
+                                done(colladaLoader.parse(data.data).scene.children[0]);
+
+                            },
+                        });
+
+                    });
+
+                };
+
+            });
+
+        });
+
+        it('should export the correct amount of links and joints', async() => {
+
+            const res =
+                await page.evaluate(async() => {
+
+                    const exp = new URDFExporter();
+
+                    const obj1 = new THREE.Object3D();
+                    const obj2 = new THREE.Object3D();
+                    const mesh = new THREE.Mesh(
+                        new THREE.SphereBufferGeometry(),
+                        new THREE.MeshBasicMaterial()
+                    );
+
+                    obj1.add(obj2);
+                    obj2.add(mesh);
+
+                    const exported = exp.parse(obj1, () => {});
+                    return window.parseURDF(exported);
+
+                });
+
+            const robot = res;
+            expect(robot.type).toEqual('URDFRobot');
+            expect(robot.children.length).toEqual(1);
+            expect(robot.axis).toEqual(null);
+            expect(robot.jointType).toEqual(null);
+            expect(robot.limit).toEqual(null);
+            expect(robot.children.length).toEqual(1);
+
+            const link1 = robot.children[0];
+            expect(link1.type).toEqual('URDFLink');
+            expect(link1.name).toEqual('_link_');
+            expect(link1.children.length).toEqual(1);
+
+            const joint1 = link1.children[0];
+            expect(joint1.type).toEqual('URDFJoint');
+            expect(joint1.children.length).toEqual(1);
+            expect(joint1.axis).toEqual(null);
+            expect(joint1.jointType).toEqual('fixed');
+            expect(joint1.limit).toEqual({ lower: 0, upper: 0 });
+            expect(joint1.children.length).toEqual(1);
+
+            const link2 = joint1.children[0];
+            expect(link2.type).toEqual('URDFLink');
+            expect(link2.name).toEqual('_link_1');
+            expect(link2.children.length).toEqual(1);
+
+            const joint2 = link2.children[0];
+            expect(joint2.type).toEqual('URDFJoint');
+            expect(joint2.children.length).toEqual(1);
+            expect(joint2.axis).toEqual(null);
+            expect(joint2.jointType).toEqual('fixed');
+            expect(joint2.limit).toEqual({ lower: 0, upper: 0 });
+            expect(joint2.children.length).toEqual(1);
+
+            const link3 = joint2.children[0];
+            expect(link3.type).toEqual('URDFLink');
+            expect(link3.name).toEqual('_link_2');
+            expect(link3.children.length).toEqual(1);
+
+            const mesh = link3.children[0];
+            expect(mesh.type).toEqual('Mesh');
+            expect(mesh.children.length).toEqual(0);
+
+        });
+
+        it('should export joints with the correct names and attributes', async() => {
+
+            const res =
+                await page.evaluate(async() => {
+
+                    const exp = new URDFExporter();
+
+                    const obj = new THREE.Object3D();
+                    const mesh = new THREE.Mesh(
+                        new THREE.SphereBufferGeometry(),
+                        new THREE.MeshBasicMaterial()
+                    );
+
+                    obj.name = 'object';
+                    mesh.name = 'mesh';
+
+                    obj.add(mesh);
+
+                    const exported = exp.parse(obj, (o, childName, parentName) => ({
+
+                        name: `${ parentName }2${ childName }`,
+                        limit: { lower: -100, upper: 100 },
+                        type: 'revolute',
+                        axis: new THREE.Vector3(0, 0, 1),
+
+                    }));
+
+                    return window.parseURDF(exported);
+
+                });
+
+            const link1 = res.children[0];
+            expect(link1.name).toEqual('object');
+            expect(link1.type).toEqual('URDFLink');
+            expect(link1.children.length).toEqual(1);
+
+            const joint1 = link1.children[0];
+            expect(joint1.name).toEqual('object2mesh');
+            expect(joint1.type).toEqual('URDFJoint');
+            expect(joint1.children.length).toEqual(1);
+            expect(joint1.axis).toEqual([0, 0, 1]);
+            expect(joint1.jointType).toEqual('revolute');
+            expect(joint1.limit).toEqual({ lower: -100, upper: 100 });
+            expect(joint1.children.length).toEqual(1);
+
+            const link2 = joint1.children[0];
+            expect(link2.type).toEqual('URDFLink');
+            expect(link2.name).toEqual('mesh');
+            expect(link2.children.length).toEqual(1);
+
+            const mesh = link2.children[0];
+            expect(mesh.type).toEqual('Mesh');
+            expect(mesh.children.length).toEqual(0);
+
+        });
+
+        it('should stop traversal early if `isLeaf` is returned as `true`', async() => {
+
+            const res =
+                await page.evaluate(async() => {
+
+                    const exp = new URDFExporter();
+
+                    const obj1 = new THREE.Object3D();
+                    const obj2 = new THREE.Object3D();
+                    const obj3 = new THREE.Object3D();
+                    const obj4 = new THREE.Object3D();
+                    const obj5 = new THREE.Object3D();
+                    const obj6 = new THREE.Object3D();
+                    const mesh = new THREE.Mesh(
+                        new THREE.SphereBufferGeometry(),
+                        new THREE.MeshBasicMaterial()
+                    );
+
+                    obj1.add(obj2);
+                    obj2.add(obj3);
+                    obj3.add(obj4);
+                    obj4.add(obj5);
+                    obj5.add(obj6);
+                    obj6.add(mesh);
+
+                    const exported = exp.parse(obj1, () => ({ isLeaf: true }));
+                    const parsed = await window.parseURDF(exported);
+
+                    console.log(parsed);
+
+                    return parsed;
+                });
+
+            const link1 = res.children[0];
+            expect(link1.type).toEqual('URDFLink');
+
+            const joint1 = link1.children[0];
+            expect(joint1.type).toEqual('URDFJoint');
+
+            const link2 = joint1.children[0];
+            expect(link2.type).toEqual('URDFLink');
+
+            const colladaRoot = link2.children[0];
+            expect(colladaRoot.type).toEqual('Group');
+            expect(colladaRoot.children.length).toEqual(1);
+
+        });
+
+        afterAll(async() => {
+
+            await page.evaluate(() => delete window.parseURDF);
+
+        });
 
     });
 
