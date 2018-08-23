@@ -172,12 +172,21 @@ class URDFExporter {
         const children = [...robottag.children];
 
         // get the list of links indexed by name
-        const linksMap = {};
         const links = children.filter(t => t.tagName.toLowerCase() === 'link');
-        links.forEach(l => linksMap[l.getAttribute('name')] = l);
-
-        // remove the unnecessary joints
         const joints = children.filter(t => t.tagName.toLowerCase() === 'joint');
+
+        // find the link
+        const root = links
+            .map(l => l.getAttribute('name'))
+            .filter(linkName => {
+
+                const childReferences = joints.filter(j => j.querySelector('child').getAttribute('link') === linkName);
+                return childReferences.length === 0;
+
+            })[0];
+
+        const linksMap = {};
+        links.forEach(l => linksMap[l.getAttribute('name')] = l);
 
         // TODO: Do we need to traverse in reverse so as nodes are removed, they're taken into
         // account in subsequent collapses? Order is important here.
@@ -265,7 +274,10 @@ class URDFExporter {
 
         // the links remaining aren't being referenced by any
         // joints and can be removed
-        for (const name in linksMap) robottag.removeChild(linksMap[name]);
+        Object
+            .keys(linksMap)
+            .filter(n => n !== root)
+            .forEach(n => robottag.removeChild(linksMap[n]));
 
         return new XMLSerializer().serializeToString(xmlDoc.documentElement);
 
