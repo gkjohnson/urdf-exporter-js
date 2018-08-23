@@ -1,22 +1,10 @@
 /* global
     THREE URDFLoader URDFExporter
-    jest
     describe it beforeAll afterAll beforeEach afterEach expect
 */
 const puppeteer = require('puppeteer');
-// const pti = require('puppeteer-to-istanbul');
+const pti = require('puppeteer-to-istanbul');
 const path = require('path');
-
-// TODO: Add tests for multipackage loading, other files
-// TODO: Don't load from the web
-// TODO: Test that joint functions rotate the joints properly
-// TODO: Verify joint limits, names, etc
-// TODO: Verify that the workingPath option works
-// TODO: Add r2d2 model test and ensure that the appropriate primitive geometry is loaded
-
-// set the timeout to 30s because we download geometry from the web
-// which could overrun the timer.
-jest.setTimeout(30000);
 
 let browser = null, page = null;
 beforeAll(async() => {
@@ -339,9 +327,9 @@ describe('URDFExporter', () => {
 
 afterAll(async() => {
 
-    // const coverage = await page.coverage.stopJSCoverage();
-    // const urdfLoaderCoverage = coverage.filter(o => /URDFLoader\.js$/.test(o.url));
-    // pti.write(urdfLoaderCoverage);
+    const coverage = await page.coverage.stopJSCoverage();
+    const urdfExporterCoverage = coverage.filter(o => /URDFExporter\.js$/.test(o.url));
+    pti.write(urdfExporterCoverage);
 
     browser.close();
 
