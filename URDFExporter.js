@@ -61,6 +61,13 @@ class URDFExporter {
                 ext: 'stl',
                 data: this.STLExporter.parse(o, { binary: true }),
                 textures: [],
+                material: {
+
+                    color: o.material ? o.material.color : null,
+                    opacity: o.material && o.material.transparent ? o.material.opacity : null,
+                    texture: o.material ? o.material.map : null,
+
+                },
             };
 
         } else {
@@ -437,11 +444,18 @@ class URDFExporter {
                             link += '<material name="">';
                             {
 
-                                if (meshInfo.material.color) {
-                                    const col = child.material.color;
-                                    const rgba = `${ col.r } ${ col.g } ${ col.b } 1`;
+                                if (meshInfo.material.color || meshInfo.material.opacity != null) {
+
+                                    const col = meshInfo.material.color;
+                                    const opacity = meshInfo.material.opacity;
+
+                                    const colStr = col ? `${ col.r } ${ col.g } ${ col.b }` : '1 1 1';
+                                    const opacityStr = opacity != null ? opacity : 1;
+
+                                    const rgba = `${ colStr } ${ opacityStr }`;
 
                                     link += `<color rgba="${ rgba }" />`;
+
                                 }
 
                                 if (meshInfo.material.texture) {

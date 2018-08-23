@@ -109,7 +109,6 @@ describe('URDFExporter', () => {
                                         name: 'texname',
                                         ext: 'png',
                                     }],
-                                    includesMaterials: true,
 
                                 };
 
@@ -130,6 +129,111 @@ describe('URDFExporter', () => {
                 expect(res.textures[0].name).toEqual('texname');
                 expect(res.textures[0].ext).toEqual('png');
                 expect(res.textures[0].directory).toEqual('meshes/test/directory');
+
+            });
+
+            it('should be able to export color without opacity', async() => {
+
+                const res =
+                    await page.evaluate(() => {
+
+                        const exp = new URDFExporter();
+                        const obj = new THREE.Mesh(
+                            new THREE.SphereBufferGeometry(),
+                            new THREE.MeshBasicMaterial()
+                        );
+
+                        return exp.parse(obj, () => {}, {
+
+                            createMeshCb: () => {
+
+                                return {
+
+                                    name: 'testname',
+                                    ext: 'test',
+                                    data: 'data',
+                                    textures: [],
+                                    material: { color: new THREE.Color(1, 0, 0) },
+
+                                };
+
+                            },
+
+                        });
+
+                    });
+
+                expect(/<color rgba="1 0 0 1"/.test(res.data)).toEqual(true);
+
+            });
+
+            it('should be able to export opacity without color', async() => {
+
+                const res =
+                    await page.evaluate(() => {
+
+                        const exp = new URDFExporter();
+                        const obj = new THREE.Mesh(
+                            new THREE.SphereBufferGeometry(),
+                            new THREE.MeshBasicMaterial()
+                        );
+
+                        return exp.parse(obj, () => {}, {
+
+                            createMeshCb: () => {
+
+                                return {
+
+                                    name: 'testname',
+                                    ext: 'test',
+                                    data: 'data',
+                                    textures: [],
+                                    material: { opacity: 0.5 },
+
+                                };
+
+                            },
+
+                        });
+
+                    });
+
+                expect(/<color rgba="1 1 1 0.5"/.test(res.data)).toEqual(true);
+
+            });
+
+            it('should be able to export a material with 0 opacity', async() => {
+
+                const res =
+                    await page.evaluate(() => {
+
+                        const exp = new URDFExporter();
+                        const obj = new THREE.Mesh(
+                            new THREE.SphereBufferGeometry(),
+                            new THREE.MeshBasicMaterial()
+                        );
+
+                        return exp.parse(obj, () => {}, {
+
+                            createMeshCb: () => {
+
+                                return {
+
+                                    name: 'testname',
+                                    ext: 'test',
+                                    data: 'data',
+                                    textures: [],
+                                    material: { color: new THREE.Color(0, 0, 1), opacity: 0 },
+
+                                };
+
+                            },
+
+                        });
+
+                    });
+
+                expect(/<color rgba="0 0 1 0"/.test(res.data)).toEqual(true);
 
             });
 
@@ -188,17 +292,19 @@ describe('URDFExporter', () => {
                         const exp = new URDFExporter();
                         const obj = new THREE.Mesh(
                             new THREE.SphereBufferGeometry(),
-                            new THREE.MeshBasicMaterial()
+                            new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.5 })
                         );
 
                         const data = exp.parse(obj, () => {}, { meshFormat: 'stl' });
                         return {
                             ext: data.meshes[0].ext,
                             isDataView: data.meshes[0].data instanceof DataView,
+                            data: data.data,
                         };
 
                     });
 
+                expect(/<color rgba="1 0 0 0.5"/.test(res.data)).toEqual(true);
                 expect(res.ext).toEqual('stl');
                 expect(res.isDataView).toBeTruthy();
 
@@ -516,11 +622,8 @@ describe('URDFExporter', () => {
                     obj6.add(mesh);
 
                     const exported = exp.parse(obj1, () => ({ isLeaf: true }));
-                    const parsed = await window.parseURDF(exported);
+                    return window.parseURDF(exported);
 
-                    console.log(parsed);
-
-                    return parsed;
                 });
 
             const link1 = res.children[0];
@@ -538,15 +641,15 @@ describe('URDFExporter', () => {
 
         });
 
+        it.skip('should modify the directory of textures included with the exported meshes', () => {});
+
+        it.skip('should include material properties and textures when `material` is included from the mesh generation function', () => {});
+
         afterAll(async() => {
 
             await page.evaluate(() => delete window.parseURDF);
 
         });
-
-        it.skip('should modify the directory of textures included with the exported meshes', () => {});
-
-        it.skip('should include material properties and textures when `material` is included from the mesh generation function', () => {});
 
     });
 

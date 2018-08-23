@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - `pathPrefix` option.
 - Ability to return `null` from `meshFunc` to indicate no visual node.
 - `isLeaf` value from jointFunc to indicate that traversal should stop.
-- Added return value from the mesh creation function to define material attributes.
+- Added return value from the mesh creation function to define material attributes including `color`, `opacity`, and `texture`.
 
 ### Removed
 - `packagePrefix` option.

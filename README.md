@@ -132,6 +132,7 @@ function createMesh(obj, linkName, meshFormat) {
       material: {
 
           color: obj.material.color,
+          opacity: obj.material.opacity,
           texture: obj.material.map
 
       }
