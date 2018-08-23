@@ -89,7 +89,6 @@ class URDFExporter {
                 ext: 'dae',
                 data: res.data,
                 textures: res.textures,
-                includesMaterials: true,
             };
 
         }
@@ -171,6 +170,8 @@ class URDFExporter {
 
     // Remove any unnecessary joints and links that fixed and have identity transforms
     _collapseLinks(urdf) {
+
+        console.warn('URDFExporter : The "collapse" functionality isn\'t stable and my corrupt the structure of the URDF');
 
         const xmlDoc = (new DOMParser()).parseFromString(urdf, 'text/xml');
         const robottag = xmlDoc.children[0];
@@ -303,8 +304,6 @@ class URDFExporter {
             robotName: object.name,
 
         }, options);
-
-        if (options.collapse) console.warn('The "collapse" functionality isn\'t stable and my corrupt the structure of the URDF');
 
         const linksMap = new WeakMap(); // object > name
         const texMap = new WeakMap(); // texture > image data
