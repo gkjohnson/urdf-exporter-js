@@ -2,6 +2,7 @@
 // THREE.js URDF Exporter
 // http://wiki.ros.org/urdf/XML/
 
+window.URDFExporter =
 class URDFExporter {
 
     // joint func returns
@@ -10,6 +11,7 @@ class URDFExporter {
     //   type
     //   limit: { lower, upper, velocity, effort }
     //   axis
+    //   isLeaf
     // }
 
     // mesh func returns
@@ -50,9 +52,9 @@ class URDFExporter {
     }
 
     // The default callback for generating mesh data from a link
-    _defaultMeshCallback(o, linkName, preferredFormat) {
+    _defaultMeshCallback(o, linkName, meshFormat) {
 
-        if (preferredFormat === 'stl') {
+        if (meshFormat === 'stl') {
 
             return {
                 name: linkName,
@@ -121,7 +123,7 @@ class URDFExporter {
             .toDataURL(`image/${ ext }`, 1)
             .replace(/^data:image\/(png|jpg);base64,/, '');
 
-            // Convert to a uint8 array
+        // Convert to a uint8 array
         return this._base64ToBuffer(base64data);
 
     }
@@ -335,7 +337,7 @@ class URDFExporter {
                     const array = euler.toArray();
                     array.pop();
 
-                    const rot = euler.toArray().join(' ');
+                    const rot = array.join(' ');
 
                     joint += `<origin xyz="${ pos }" rpy="${ rot }" />`;
 
@@ -491,8 +493,8 @@ class URDFExporter {
         // format the final output
         const finalurdf = this._format(options.collapse ? this._collapseLinks(urdf) : urdf);
 
-        return { urdf: finalurdf, meshes, textures };
+        return { data: finalurdf, meshes, textures };
 
     }
 
-}
+};
