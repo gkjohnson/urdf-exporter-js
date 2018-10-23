@@ -1,8 +1,16 @@
-/* globals THREE */
+/**
+ * @author Garrett Johnson / http://gkjohnson.github.io/
+ * https://github.com/gkjohnson/urdf-exporter
+ */
+
+import * as THREE from 'three';
+import { STLExporter } from 'three/examples/js/loaders/STLExporter';
+import { ColladaExporter } from 'three/examples/js/loaders/ColladaExporter';
+
 // THREE.js URDF Exporter
 // http://wiki.ros.org/urdf/XML/
 
-window.URDFExporter =
+export default
 class URDFExporter {
 
     // joint func returns
@@ -23,13 +31,13 @@ class URDFExporter {
 
     get STLExporter() {
 
-        return this._stlExporter = this._stlExporter || new THREE.STLExporter();
+        return this._stlExporter = this._stlExporter || new STLExporter();
 
     }
 
     get ColladaExporter() {
 
-        return this._colladaExporter = this._colladaExporter || new THREE.ColladaExporter();
+        return this._colladaExporter = this._colladaExporter || new ColladaExporter();
 
     }
 
