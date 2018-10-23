@@ -23,7 +23,7 @@ beforeAll(async() => {
     await page.addScriptTag({ path: path.join(__dirname, '../node_modules/three/examples/js/loaders/STLLoader.js') });
     await page.addScriptTag({ path: path.join(__dirname, '../node_modules/three/examples/js/loaders/ColladaLoader.js') });
     await page.addScriptTag({ path: path.join(__dirname, '../node_modules/urdf-loader/URDFLoader.js') });
-    await page.addScriptTag({ path: path.join(__dirname, '../URDFExporter.js') });
+    await page.addScriptTag({ path: path.join(__dirname, '../umd/URDFExporter.js') });
 
     await page.coverage.startJSCoverage();
 

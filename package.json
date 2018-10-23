@@ -2,13 +2,14 @@
   "name": "urdf-exporter",
   "version": "0.2.0",
   "description": "THREE.js utility for exporting object trees as a URDF file",
-  "main": "URDFExporter.js",
+  "main": "src/URDFExporter.js",
   "files": [
-    "URDFExporter.js"
+    "src/*"
   ],
   "scripts": {
-    "start": "static-server",
-    "test": "jest",
+    "start": "concurrently --kill-others \"rollup -c -w\" \"static-server\"",
+    "build": "rollup -c",
+    "test": "rollup -c && jest",
     "lint": "eslint *.js",
     "coverage": "nyc report --reporter=html & opn coverage/index.html"
   },
@@ -39,6 +40,7 @@
     "three": "^0.95.0"
   },
   "devDependencies": {
+    "concurrently": "^4.0.1",
     "eslint": "^5.4.0",
     "jest": "^23.5.0",
     "jest-cli": "^23.5.0",
@@ -47,6 +49,7 @@
     "opn-cli": "^3.1.0",
     "puppeteer": "^1.7.0",
     "puppeteer-to-istanbul": "^1.2.2",
+    "rollup": "^0.66.6",
     "static-server": "^2.2.0",
     "three": "^0.95.0",
     "urdf-loader": "^0.4.2"
