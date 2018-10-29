@@ -72,7 +72,7 @@ describe('URDFExporter', () => {
                         const exp = new URDFExporter();
                         const obj = new THREE.Object3D();
 
-                        return exp.parse(obj, () => {}, { robotName: 'test' });
+                        return exp.parse(obj, () => {}, null, { robotName: 'test' });
 
                     });
 
@@ -94,7 +94,7 @@ describe('URDFExporter', () => {
                             new THREE.MeshBasicMaterial()
                         );
 
-                        return exp.parse(obj, () => {}, {
+                        return exp.parse(obj, () => {}, null, {
 
                             createMeshCb: () => {
 
@@ -143,7 +143,7 @@ describe('URDFExporter', () => {
                             new THREE.MeshBasicMaterial()
                         );
 
-                        return exp.parse(obj, () => {}, {
+                        return exp.parse(obj, () => {}, null, {
 
                             createMeshCb: () => {
 
@@ -178,7 +178,7 @@ describe('URDFExporter', () => {
                             new THREE.MeshBasicMaterial()
                         );
 
-                        return exp.parse(obj, () => {}, {
+                        return exp.parse(obj, () => {}, null, {
 
                             createMeshCb: () => {
 
@@ -213,7 +213,7 @@ describe('URDFExporter', () => {
                             new THREE.MeshBasicMaterial()
                         );
 
-                        return exp.parse(obj, () => {}, {
+                        return exp.parse(obj, () => {}, null, {
 
                             createMeshCb: () => {
 
@@ -252,7 +252,7 @@ describe('URDFExporter', () => {
                             new THREE.MeshBasicMaterial()
                         );
 
-                        return exp.parse(obj, () => {}, { pathPrefix: 'package://test/' });
+                        return exp.parse(obj, () => {}, null, { pathPrefix: 'package://test/' });
 
                     });
 
@@ -275,7 +275,7 @@ describe('URDFExporter', () => {
                             new THREE.MeshBasicMaterial()
                         );
 
-                        return exp.parse(obj, () => {}, { meshFormat: 'dae' });
+                        return exp.parse(obj, () => {}, null, { meshFormat: 'dae' });
 
                     });
 
@@ -295,7 +295,7 @@ describe('URDFExporter', () => {
                             new THREE.MeshBasicMaterial({ color: 0xff0000, transparent: true, opacity: 0.5 })
                         );
 
-                        const data = exp.parse(obj, () => {}, { meshFormat: 'stl' });
+                        const data = exp.parse(obj, () => {}, null, { meshFormat: 'stl' });
                         return {
                             ext: data.meshes[0].ext,
                             isDataView: data.meshes[0].data instanceof DataView,
@@ -321,7 +321,7 @@ describe('URDFExporter', () => {
                             new THREE.MeshBasicMaterial()
                         );
 
-                        return exp.parse(obj, () => {}, { meshFormat: 'gltf' });
+                        return exp.parse(obj, () => {}, null, { meshFormat: 'gltf' });
 
                     });
 
@@ -355,7 +355,7 @@ describe('URDFExporter', () => {
                         obj3.add(obj4);
                         obj4.add(mesh);
 
-                        return exp.parse(obj1, () => {}, { collapse: false });
+                        return exp.parse(obj1, () => {}, null, { collapse: false });
 
                     });
 
@@ -384,7 +384,7 @@ describe('URDFExporter', () => {
                         obj3.add(obj4);
                         obj4.add(mesh);
 
-                        return exp.parse(obj1, () => {}, { collapse: true });
+                        return exp.parse(obj1, () => {}, null, { collapse: true });
 
                     });
 
@@ -414,7 +414,7 @@ describe('URDFExporter', () => {
                         obj3.add(obj4);
                         obj4.add(mesh);
 
-                        return exp.parse(obj1, () => {}, { collapse: true });
+                        return exp.parse(obj1, () => {}, null, { collapse: true });
 
                     });
 

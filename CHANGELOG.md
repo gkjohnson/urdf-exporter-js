@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 - Moved URDFExporter.js file to `src` folder.
 - Added UMD variant of URDFExporter to `umd` folder.
+- Added an `onComplete` callback to the `parse` function
 
 ## [0.2.0] - 2018-08-23
 ### Changed

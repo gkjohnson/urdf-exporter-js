@@ -29,7 +29,7 @@ function jointFunc (obj, childName, parentName) {
 
 // Generate the URDF file and associate meshes and textures
 const exporter = new URDFExporter();
-const res = exporter.parse(robot, jointFunc, { collapse: true, robotName: 'T12' });
+const res = exporter.parse(robot, jointFunc, null, { collapse: true, robotName: 'T12' });
 
 // Save out a zip using JSZip (https://stuk.github.io/jszip/)
 // with the file structure
@@ -47,7 +47,7 @@ zip
     .then(zipdata => saveData(zipdata, 't12urdf.zip'));
 ```
 
-### URDFExporter.parse(object, jointfunc, options = {}) : Object
+### URDFExporter.parse(object, jointfunc, onComplete, options = {}) : Object
 
 Processes the given `object` into a URDF file and assets. Returns an object of the form
 ```js
@@ -100,6 +100,9 @@ function joinfunc(childObject, childLinkName, parentLinkName) {
   }
 }
 ```
+#### onComplete(result) : Function
+
+Called once the URDF file has been generated.
 
 #### options
 ##### createMeshCb(obj, linkname, meshFormat) : Function

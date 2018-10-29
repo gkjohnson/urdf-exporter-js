@@ -302,7 +302,7 @@
 
         // Convert the object into a urdf and get the associated
         // mesh and texture data
-        parse(object, jointfunc, options = {}) {
+        parse(object, jointfunc, onComplete, options = {}) {
 
             options = Object.assign({
 
@@ -526,7 +526,11 @@
             // format the final output
             const finalurdf = this._format(options.collapse ? this._collapseLinks(urdf) : urdf);
 
-            return { data: finalurdf, meshes, textures };
+            const result = { data: finalurdf, meshes, textures };
+
+            if (onComplete) onComplete(result);
+
+            return result;
 
         }
 
