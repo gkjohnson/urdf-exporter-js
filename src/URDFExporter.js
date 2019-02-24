@@ -4,8 +4,8 @@
  */
 
 import * as THREE from 'three';
-import { STLExporter } from 'three/examples/js/loaders/STLExporter';
-import { ColladaExporter } from 'three/examples/js/loaders/ColladaExporter';
+import { STLExporter } from 'three/examples/js/exporters/STLExporter';
+import { ColladaExporter } from 'three/examples/js/exporters/ColladaExporter';
 
 // THREE.js URDF Exporter
 // http://wiki.ros.org/urdf/XML/
