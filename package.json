@@ -2,8 +2,8 @@
   "name": "urdf-exporter",
   "version": "0.3.1",
   "description": "THREE.js utility for exporting object trees as a URDF file",
-  "main": "umd/URDFExporter.js",
-  "module": "src/URDFExporter.js",
+  "main": "umd/index.js",
+  "module": "src/index.js",
   "files": [
     "src/*",
     "umd/*"
@@ -12,8 +12,7 @@
     "start": "concurrently --kill-others \"rollup -c -w\" \"static-server\"",
     "build": "rollup -c",
     "test": "rollup -c && jest",
-    "lint": "eslint *.js",
-    "coverage": "nyc report --reporter=html & opn coverage/index.html"
+    "lint": "eslint *.js"
   },
   "repository": {
     "type": "git",
