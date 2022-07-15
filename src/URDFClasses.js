@@ -1,4 +1,4 @@
-import { Object3D, Vector3 } from 'three';
+import { Matrix3, Object3D, Vector3 } from 'three';
 
 class URDFBase extends Object3D {
 
@@ -47,6 +47,19 @@ class URDFVisual extends URDFBase {
 
 }
 
+class URDFInertialFrame {
+
+    constructor() {
+
+        this.position = new Vector3();
+        this.rotation = new Euler();
+        this.mass = 0;
+        this.inertial = new Matrix3();
+
+    }
+
+}
+
 class URDFLink extends URDFBase {
 
 	constructor( ...args ) {
@@ -54,6 +67,8 @@ class URDFLink extends URDFBase {
 		super( ...args );
 		this.isURDFLink = true;
 		this.type = 'URDFLink';
+
+        this.inertial = new URDFInertialFrame();
 
 	}
 

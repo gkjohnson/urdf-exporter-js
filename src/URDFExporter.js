@@ -229,7 +229,6 @@ export class URDFExporter {
 			const parentJoint = getParentJoint( node );
 			const children = node.children;
 			let result = '';
-			result += `${ indent4 }${ getRelativeOriginNode( node, parentJoint ) }`;
 
 			// if we have one child then it might be a geometric result
 			if ( children.length === 1.0 && children[ 0 ].isMesh ) {
@@ -237,40 +236,46 @@ export class URDFExporter {
 				const mesh = children[ 0 ];
 				if ( mesh.geometry.isSphereGeometry ) {
 
-					// TODO
+                    // sphere
+                    result += `${ indent4 }${ getRelativeOriginNode( mesh, parentJoint ) }`;
+
 					const radius = mesh.geometry.parameters.radius * mesh.scale.x;
+                    result += `${ indent4 }<sphere radius="${ radius }" />`;
 
 				} else if ( mesh.geometry.isBoxGeometry ) {
 
-					// TODO
+                    // box
+                    result += `${ indent4 }${ getRelativeOriginNode( mesh, parentJoint ) }`;
+
 					let { width, height, depth } = mesh.geometry.parameters;
 					width *= mesh.scale.x;
 					height *= mesh.scale.y;
 					depth *= mesh.scale.z;
 
+                    result += `${ indent }<box size="${ width } ${ height } ${ depth }" />`;
+
 				} else if ( mesh.geometry.isCylinderGeometry ) {
 
-					// TODO
-					let { radiusTop, height } = mesh.geometry.parameters;
-					const radius = radiusTop * mesh.scale.x;
+                    // cylinder
+					// TODO: include three.js rotation offset here
+                    result += `${ indent4 }${ getRelativeOriginNode( mesh, parentJoint ) }`;
+
+                    let { radiusTop, height } = mesh.geometry.parameters;
+					radiusTop *= radiusTop * mesh.scale.x;
 					height *= mesh.scale.y;
 
-					// TODO: include three.js rotation offset here
-
-				} else {
-
-					const path = processGeometryCallback( node );
-					if ( path !== null ) {
-
-						result += `${ indent4 }<geometry><mesh filename="${ path }"/></geometry>`;
-
-					}
+                    result += `${ indent }<cylinder length="${ height }" radius="${ radius }" />`;
 
 				}
 
-			} else {
+			}
 
-				const path = processGeometryCallback( node );
+            if ( result === '' ) {
+
+                // mesh
+                result += `${ indent4 }${ getRelativeOriginNode( node, parentJoint ) }`;
+
+                const path = processGeometryCallback( node );
 				if ( path !== null ) {
 
 					result += `${ indent4 }<geometry><mesh filename="${ path }"/></geometry>`;
@@ -326,8 +331,7 @@ export class URDFExporter {
 
 				} else {
 
-					// ???
-					console.warn();
+					console.warn( `URDFExporter: Link "${ link.name }" cannot contain another link.` );
 
 				}
 
