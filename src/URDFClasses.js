@@ -2,145 +2,145 @@ import { Object3D, Vector3 } from 'three';
 
 class URDFBase extends Object3D {
 
-    constructor(...args) {
+	constructor( ...args ) {
 
-        super(...args);
-        this.urdfNode = null;
-        this.urdfName = '';
+		super( ...args );
+		this.urdfNode = null;
+		this.urdfName = '';
 
-    }
+	}
 
-    copy(source, recursive) {
+	copy( source, recursive ) {
 
-        super.copy(source, recursive);
+		super.copy( source, recursive );
 
-        this.urdfNode = source.urdfNode;
-        this.urdfName = source.urdfName;
+		this.urdfNode = source.urdfNode;
+		this.urdfName = source.urdfName;
 
-        return this;
+		return this;
 
-    }
+	}
 
 }
 
 class URDFCollider extends URDFBase {
 
-    constructor(...args) {
+	constructor( ...args ) {
 
-        super(...args);
-        this.isURDFCollider = true;
-        this.type = 'URDFCollider';
+		super( ...args );
+		this.isURDFCollider = true;
+		this.type = 'URDFCollider';
 
-    }
+	}
 
 }
 
 class URDFVisual extends URDFBase {
 
-    constructor(...args) {
+	constructor( ...args ) {
 
-        super(...args);
-        this.isURDFVisual = true;
-        this.type = 'URDFVisual';
+		super( ...args );
+		this.isURDFVisual = true;
+		this.type = 'URDFVisual';
 
-    }
+	}
 
 }
 
 class URDFLink extends URDFBase {
 
-    constructor(...args) {
+	constructor( ...args ) {
 
-        super(...args);
-        this.isURDFLink = true;
-        this.type = 'URDFLink';
+		super( ...args );
+		this.isURDFLink = true;
+		this.type = 'URDFLink';
 
-    }
+	}
 
 }
 
 class URDFJoint extends URDFBase {
 
-    get jointType() {
+	get jointType() {
 
-        return this._jointType;
+		return this._jointType;
 
-    }
+	}
 
-    set jointType(v) {
+	set jointType( v ) {
 
-        if (this.jointType === v) return;
-        this._jointType = v;
-        this.matrixWorldNeedsUpdate = true;
-        switch (v) {
+		if ( this.jointType === v ) return;
+		this._jointType = v;
+		this.matrixWorldNeedsUpdate = true;
+		switch ( v ) {
 
-            case 'fixed':
-                this.jointValue = [];
-                break;
+			case 'fixed':
+				this.jointValue = [];
+				break;
 
-            case 'continuous':
-            case 'revolute':
-            case 'prismatic':
-                this.jointValue = new Array(1).fill(0);
-                break;
+			case 'continuous':
+			case 'revolute':
+			case 'prismatic':
+				this.jointValue = new Array( 1 ).fill( 0 );
+				break;
 
-            case 'planar':
-                this.jointValue = new Array(2).fill(0);
-                break;
+			case 'planar':
+				this.jointValue = new Array( 2 ).fill( 0 );
+				break;
 
-            case 'floating':
-                this.jointValue = new Array(6).fill(0);
-                break;
+			case 'floating':
+				this.jointValue = new Array( 6 ).fill( 0 );
+				break;
 
-        }
+		}
 
-    }
+	}
 
-    get angle() {
+	get angle() {
 
-        return this.jointValue[0];
+		return this.jointValue[ 0 ];
 
-    }
+	}
 
-    constructor(...args) {
+	constructor( ...args ) {
 
-        super(...args);
+		super( ...args );
 
-        this.isURDFJoint = true;
-        this.type = 'URDFJoint';
+		this.isURDFJoint = true;
+		this.type = 'URDFJoint';
 
-        this.jointType = 'fixed';
-        this.axis = new Vector3(1, 0, 0);
-        this.limit = { lower: 0, upper: 0 };
+		this.jointType = 'fixed';
+		this.axis = new Vector3( 1, 0, 0 );
+		this.limit = { lower: 0, upper: 0 };
 
-    }
+	}
 
 }
 
 class URDFMimicJoint extends URDFJoint {
 
-    constructor(...args) {
+	constructor( ...args ) {
 
-        super(...args);
-        this.type = 'URDFMimicJoint';
-        this.mimicJoint = null;
-        this.offset = 0;
-        this.multiplier = 1;
+		super( ...args );
+		this.type = 'URDFMimicJoint';
+		this.mimicJoint = null;
+		this.offset = 0;
+		this.multiplier = 1;
 
-    }
+	}
 
 }
 
 class URDFRobot extends URDFLink {
 
-    constructor(...args) {
+	constructor( ...args ) {
 
-        super(...args);
-        this.isURDFRobot = true;
+		super( ...args );
+		this.isURDFRobot = true;
 
-        this.robotName = null;
+		this.robotName = null;
 
-    }
+	}
 
 }
 

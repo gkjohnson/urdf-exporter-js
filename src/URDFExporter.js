@@ -1,4 +1,4 @@
-import { Euler, Matrix4, Quaternion, Vector3 } from 'three';
+import { Euler, LinearMipMapNearestFilter, Matrix4, Quaternion, Vector3 } from 'three';
 
 // http://wiki.ros.org/urdf/XML/
 const _euler = new Euler();
@@ -7,363 +7,414 @@ const _scale = new Vector3();
 const _position = new Vector3();
 const _matrix = new Matrix4();
 
-function repeatChar(char, count) {
+function repeatChar( char, count ) {
 
-    let result = '';
-    for ( let i = 0; i < count; i ++ ) {
+	let result = '';
+	for ( let i = 0; i < count; i ++ ) {
 
-        result += char;
+		result += char;
 
-    }
+	}
 
-    return result;
+	return result;
 
 }
 
 // returns the transform of root relative to parent
-function getRelativeOriginNode(root, parent) {
+function getRelativeOriginNode( root, parent ) {
 
-    _matrix.copy(parent.matrixWorld).invert().premultiply(root.matrixWorld);
-    return getOriginNode(_matrix);
+	_matrix.copy( parent.matrixWorld ).invert().premultiply( root.matrixWorld );
+	return getOriginNode( _matrix );
 
 }
 
 // returns the origin node for the given matrix
-function getOriginNode(matrix) {
+function getOriginNode( matrix ) {
 
-    matrix.decompose(_position, _quaternion, _scale);
-    _euler.setFromQuaternion(_quaternion, 'zyx');
+	matrix.decompose( _position, _quaternion, _scale );
+	_euler.setFromQuaternion( _quaternion, 'zyx' );
 
-    return `<origin xyz="${ _position.x } ${ _position.y } ${ _position.z }" rpy="${ _euler.x } ${ _euler.y } ${ _euler.z }"/>`;
+	return `<origin xyz="${ _position.x } ${ _position.y } ${ _position.z }" rpy="${ _euler.x } ${ _euler.y } ${ _euler.z }"/>`;
 
 }
 
 // recursively traverses the root until reaching a URDF node. Stops if the callback returns "true".
-function traverseImmediateMeaningfulNodes(root, cb) {
+function traverseImmediateMeaningfulNodes( root, cb ) {
 
-    const children = root.children;
-    for ( let i = 0, l = children.length; i < l; i ++) {
+	const children = root.children;
+	for ( let i = 0, l = children.length; i < l; i ++ ) {
 
-        const c = children[ i ];
-        if (
-            c.isURDFLink ||
+		const c = children[ i ];
+		if (
+			c.isURDFLink ||
             c.isURDFJoint ||
             c.isURDFCollider ||
             c.isURDFVisual
-        ) {
+		) {
 
-            if ( cb( c ) === true ) {
+			if ( cb( c ) === true ) {
 
-                break;
+				break;
 
-            }
+			}
 
-        }
+		}
 
-    }
+	}
 
 }
 
 // recursively traverse the parent until a callback returns "true" or the robot root is found.
-function traverseParents(root, cb) {
+function traverseParents( root, cb ) {
 
-    let curr = root.parent;
-    while ( curr ) {
+	let curr = root.parent;
+	while ( curr ) {
 
-        if ( cb( curr ) === true ) {
+		if ( cb( curr ) === true ) {
 
-            break;
+			break;
 
-        }
+		}
 
-        if ( curr.isURDFRobot ) {
+		if ( curr.isURDFRobot ) {
 
-            break;
+			break;
 
-        }
+		}
 
-        curr = curr.parent;
+		curr = curr.parent;
 
-    }
+	}
 
 }
 
 // returns the first found child link.
 function getChildLink( root ) {
 
-    let result = null;
-    traverseImmediateMeaningfulNodes( root, node => {
+	let result = null;
+	traverseImmediateMeaningfulNodes( root, node => {
 
-        if ( node.isURDFLink ) {
+		if ( node.isURDFLink ) {
 
-            result = node;
-            return true;
+			result = node;
+			return true;
 
-        }
+		}
 
-    } );
+	} );
 
-    return result;
+	return result;
 
 }
 
 // returns the first found parent link.
 function getParentLink( root ) {
 
-    let result = null;
-    traverseParents( root, node => {
+	let result = null;
+	traverseParents( root, node => {
 
-        if ( node.isURDFLink ) {
+		if ( node.isURDFLink ) {
 
-            result = node;
-            return true;
+			result = node;
+			return true;
 
-        }
+		}
 
-    } );
+	} );
 
-    return result;
+	return result;
 
 }
 
 // returns the first found parent joint.
 function getParentJoint( root ) {
 
-    let result = null;
-    traverseParents( root, node => {
+	let result = null;
+	traverseParents( root, node => {
 
-        if ( node.isURDFJoint ) {
+		if ( node.isURDFJoint ) {
 
-            result = node;
-            return true;
+			result = node;
+			return true;
 
-        }
+		}
 
-    } );
+	} );
 
-    return result;
+	return result;
 
 }
 
 export class URDFExporter {
 
-    constructor() {
+	constructor() {
 
-        this.indent = '\t';
-        this.processGeometryCallback = () => {
+		this.indent = '\t';
+		this.processGeometryCallback = () => {
 
-            return null;
+			return null;
 
-        };
+		};
 
-    }
+	}
 
-    parse(root) {
+	parse( root ) {
 
-        const { indent, processGeometryCallback } = this;
-        const indent1 = repeatChar( indent, 1 );
-        const indent2 = repeatChar( indent, 2 );
-        const indent3 = repeatChar( indent, 3 );
-        const indent4 = repeatChar( indent, 4 );
+		const { indent, processGeometryCallback } = this;
 
-        let result = '';
-        if (!root.isURDFRobot) {
+		const indent1 = repeatChar( indent, 1 );
+		const indent2 = repeatChar( indent, 2 );
+		const indent3 = repeatChar( indent, 3 );
+		const indent4 = repeatChar( indent, 4 );
 
-            console.warn('URDFExporter: Root link is expected to be a URDFRobot instance.');
+		let result = '';
+		if ( ! root.isURDFRobot ) {
 
-        }
+			console.warn( 'URDFExporter: Root link is expected to be a URDFRobot instance.' );
 
-        const linkNodes = [];
-        const jointNodes = [];
+		}
 
-        processLink(root);
+		// initialize the names of joints and links that are unnamed
+		const nameMap = new Map();
+		let linkIndex = 0;
+		let jointIndex = 0;
+		root.traverse( c => {
 
-        result += `<robot name="${ root.robotName || 'robot' }>`;
+			if ( c.isURDFLink ) {
 
-        result += linkNodes.join('');
+				if ( c.name ) {
 
-        result += jointNodes.join('');
+					nameMap.set( c, c.name );
 
-        result += '</robot>'
+				} else {
 
-        return result;
+					nameMap.set( c, `link_${ linkIndex ++ }` );
 
-        function processVisualContents( node ) {
+				}
 
-            const parentJoint = getParentJoint( node );
-            const children = node.children;
-            let result = '';
-            result += `${ indent4 }${ getRelativeOriginNode( node, parentJoint ) }`;
+			} else if ( c.isURDFJoint ) {
 
-            // if we have one child then it might be a geometric result
-            if ( children.length === 1.0 && children[ 0 ].isMesh ) {
+				if ( c.name ) {
 
-                const mesh = children[ 0 ];
-                if ( mesh.geometry.isSphereGeometry ) {
+					nameMap.set( c, c.name );
 
-                    // TODO
-                    const radius = mesh.geometry.parameters.radius * mesh.scale.x;
+				} else {
 
-                } else if ( mesh.geometry.isBoxGeometry ) {
+					nameMap.set( c, `joint_${ jointIndex ++ }` );
 
-                    // TODO
-                    let { width, height, depth } = mesh.geometry.parameters;
-                    width *= mesh.scale.x;
-                    height *= mesh.scale.y;
-                    depth *= mesh.scale.z;
+				}
 
-                } else if ( mesh.geometry.isCylinderGeometry ) {
+			}
 
-                    // TODO
-                    let { radiusTop, height } = mesh.geometry.parameters;
-                    const radius = radiusTop * mesh.scale.x;
-                    height *= mesh.scale.y;
+		} );
 
-                    // TODO: include three.js rotation offset here
 
-                } else {
+		const linkNodes = [];
+		const jointNodes = [];
 
-                    const path = processGeometryCallback( node );
-                    if ( path !== null ) {
+		processLink( root );
 
-                        result += `${ indent4 }<geometry><mesh filename="${ path }"/></geometry>`;
+		result += `<robot name="${ root.robotName || 'robot' }>`;
 
-                    }
+		result += linkNodes.join( '' );
 
-                }
+		result += jointNodes.join( '' );
 
-            } else {
+		result += '</robot>';
 
-                const path = processGeometryCallback( node );
-                if ( path !== null ) {
+		return result;
 
-                    result += `${ indent4 }<geometry><mesh filename="${ path }"/></geometry>`;
+		function processVisualContents( node ) {
 
-                }
+			const parentJoint = getParentJoint( node );
+			const children = node.children;
+			let result = '';
+			result += `${ indent4 }${ getRelativeOriginNode( node, parentJoint ) }`;
 
-            }
+			// if we have one child then it might be a geometric result
+			if ( children.length === 1.0 && children[ 0 ].isMesh ) {
 
-            return result;
+				const mesh = children[ 0 ];
+				if ( mesh.geometry.isSphereGeometry ) {
 
-        }
+					// TODO
+					const radius = mesh.geometry.parameters.radius * mesh.scale.x;
 
+				} else if ( mesh.geometry.isBoxGeometry ) {
 
-        function processLink( link ) {
+					// TODO
+					let { width, height, depth } = mesh.geometry.parameters;
+					width *= mesh.scale.x;
+					height *= mesh.scale.y;
+					depth *= mesh.scale.z;
 
-            let result = '';
-            result += `${ indent1 }<link name="${ link.name }">`;
+				} else if ( mesh.geometry.isCylinderGeometry ) {
 
-            // TODO: include inertial
+					// TODO
+					let { radiusTop, height } = mesh.geometry.parameters;
+					const radius = radiusTop * mesh.scale.x;
+					height *= mesh.scale.y;
 
-            // process any necessary child information
-            traverseImmediateMeaningfulNodes( link, child => {
+					// TODO: include three.js rotation offset here
 
-                if ( child.isURDFJoint ) {
+				} else {
 
-                    processJoint( child );
+					const path = processGeometryCallback( node );
+					if ( path !== null ) {
 
-                } else if ( child.isURDFVisual ) {
+						result += `${ indent4 }<geometry><mesh filename="${ path }"/></geometry>`;
 
-                    result += `${ indent3 }<visual>`;
-                    result += processVisualContents(child);
-                    result += `${ indent3 }<visual>`;
+					}
 
-                } else if ( child.isURDFCollider ) {
+				}
 
-                    result += `${ indent3 }<collider>`;
-                    result += processVisualContents(child);
-                    result += `${ indent3 }<collider>`;
+			} else {
 
-                } else {
+				const path = processGeometryCallback( node );
+				if ( path !== null ) {
 
-                    // ???
-                    console.warn();
+					result += `${ indent4 }<geometry><mesh filename="${ path }"/></geometry>`;
 
-                }
+				}
 
-            } );
+			}
 
-            result += `${ indent1 }</link>`;
-            linkNodes.push( result );
+			return result;
 
-        }
+		}
 
-        function processJoint( joint ) {
 
-            // warn user of invalid structure
-            let totalLinks = 0;
-            let totalJoints = 0;
-            let totalVisual = 0;
-            let totalCollider = 0;
-            traverseImmediateMeaningfulNodes(joint, node => {
+		function processLink( link ) {
 
-                if ( child.isURDFJoint ) {
+			let result = '';
+			result += `${ indent1 }<link name="${ nameMap.get( link ) }">`;
 
-                    totalJoints ++;
+			// TODO: include inertial
 
-                } else if ( child.isURDFVisual ) {
+			// process any necessary child information
+			traverseImmediateMeaningfulNodes( link, child => {
 
-                    totalVisual ++;
+				if ( child.isURDFJoint ) {
 
-                } else if ( child.isURDFCollider ) {
+					processJoint( child );
 
-                    totalCollider ++;
+				} else if ( child.isURDFVisual ) {
 
-                } else if ( child.isURDFLink ) {
+					result += `${ indent3 }<visual`;
+					if ( child.name ) {
 
-                    totalLinks ++;
+						result += ` name="${ child.name }"`;
 
-                }
+					}
 
-            } );
+					result += '/>';
+					result += processVisualContents( child );
+					result += `${ indent3 }<visual>`;
 
-            if ( totalLinks > 1 ) console.warn(`URDFExporter: too many links are children of Joint ${ joint.name }.`);
-            if ( totalJoints > 0 ) console.warn(`URDFExporter: joints cannot be children of Joint ${ joint.name }.`);
-            if ( totalVisual > 0 ) console.warn(`URDFExporter: visual nodes cannot be children of Joint ${ joint.name }.`);
-            if ( totalCollider > 0 ) console.warn(`URDFExporter: collider nodes cannot be children of Joint ${ joint.name }.`);
+				} else if ( child.isURDFCollider ) {
 
-            // find the relevant parent and child joints
-            const parentLink = getParentLink( joint );
-            const parentJoint = getParentJoint( joint );
-            const childLink = getChildLink( joint );
+					result += `${ indent3 }<collider`;
+					if ( child.name ) {
 
-            // construct teh node
-            let result = '';
-            result += `${ indent1 }<joint name="${ joint.name }" type="${ joint.jointType || 'fixed' }">`;
+						result += ` name="${ child.name }"`;
 
-            result += `${ indent2 }${ getRelativeOriginNode(joint, parentJoint) }`;
+					}
 
-            result += `${ indent2 }<parent link="${ parentLink.name }"/>`;
+					result += '/>';
+					result += processVisualContents( child );
+					result += `${ indent3 }<collider>`;
 
-            result += `${ indent2 }<child link="${ childLink.name }"/>`;
+				} else {
 
-            if ( joint.jointType === 'revolute' || joint.jointType === 'continuous' || joint.jointType === 'prismatic' ) {
+					// ???
+					console.warn();
 
-                const axis = joint.axis;
-                result += `${ indent2 }<axis xyz="${ axis.x } ${ axis.y } ${ axis.z }"/>`;
+				}
 
-            }
+			} );
 
-            // TODO: include more limits?
-            if ( joint.limits ) {
+			result += `${ indent1 }</link>`;
+			linkNodes.push( result );
 
-                const limits = joint.limits;
-                result += `${ indent2 }<limit effort="${ limits.effort || 0 }" velocity="${ limits.velocity }"`;
-                if ( joint.jointType !== 'continuous' && 'lower' in limits && 'upper' in limits ) {
+		}
 
-                    result += `lower="${ limits.lower }" upper="${ limits.upper }`;
+		function processJoint( joint ) {
 
-                }
-                result += '/>';
+			// warn user of invalid structure
+			let totalLinks = 0;
+			let totalJoints = 0;
+			let totalVisual = 0;
+			let totalCollider = 0;
+			traverseImmediateMeaningfulNodes( joint, node => {
 
-            }
+				if ( child.isURDFJoint ) {
 
-            result += `${ indent1 }</joint>`
+					totalJoints ++;
 
-            jointNodes.push( result );
+				} else if ( child.isURDFVisual ) {
 
-        }
+					totalVisual ++;
 
-    }
+				} else if ( child.isURDFCollider ) {
+
+					totalCollider ++;
+
+				} else if ( child.isURDFLink ) {
+
+					totalLinks ++;
+
+				}
+
+			} );
+
+			if ( totalLinks > 1 ) console.warn( `URDFExporter: too many links are children of Joint ${ joint.name }.` );
+			if ( totalJoints > 0 ) console.warn( `URDFExporter: joints cannot be children of Joint ${ joint.name }.` );
+			if ( totalVisual > 0 ) console.warn( `URDFExporter: visual nodes cannot be children of Joint ${ joint.name }.` );
+			if ( totalCollider > 0 ) console.warn( `URDFExporter: collider nodes cannot be children of Joint ${ joint.name }.` );
+
+			// find the relevant parent and child joints
+			const parentLink = getParentLink( joint );
+			const parentJoint = getParentJoint( joint );
+			const childLink = getChildLink( joint );
+
+			// construct teh node
+			let result = '';
+			result += `${ indent1 }<joint name="${ nameMap.get( joint ) }" type="${ joint.jointType || 'fixed' }">`;
+
+			result += `${ indent2 }${ getRelativeOriginNode( joint, parentJoint ) }`;
+
+			result += `${ indent2 }<parent link="${ parentLink.name }"/>`;
+
+			result += `${ indent2 }<child link="${ childLink.name }"/>`;
+
+			if ( joint.jointType === 'revolute' || joint.jointType === 'continuous' || joint.jointType === 'prismatic' ) {
+
+				const axis = joint.axis;
+				result += `${ indent2 }<axis xyz="${ axis.x } ${ axis.y } ${ axis.z }"/>`;
+
+			}
+
+			// TODO: include more limits?
+			if ( joint.limits ) {
+
+				const limits = joint.limits;
+				result += `${ indent2 }<limit effort="${ limits.effort || 0 }" velocity="${ limits.velocity }"`;
+				if ( joint.jointType !== 'continuous' && 'lower' in limits && 'upper' in limits ) {
+
+					result += `lower="${ limits.lower }" upper="${ limits.upper }`;
+
+				}
+
+				result += '/>';
+
+			}
+
+			result += `${ indent1 }</joint>`;
+
+			jointNodes.push( result );
+
+		}
+
+	}
 
 }
