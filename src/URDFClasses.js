@@ -49,14 +49,14 @@ class URDFVisual extends URDFBase {
 
 class URDFInertialFrame {
 
-    constructor() {
+	constructor() {
 
-        this.position = new Vector3();
-        this.rotation = new Euler();
-        this.mass = 0;
-        this.inertial = new Matrix3();
+		this.position = new Vector3();
+		this.rotation = new Euler();
+		this.mass = 0;
+		this.inertial = new Matrix3();
 
-    }
+	}
 
 }
 
@@ -68,7 +68,7 @@ class URDFLink extends URDFBase {
 		this.isURDFLink = true;
 		this.type = 'URDFLink';
 
-        this.inertial = new URDFInertialFrame();
+		this.inertial = new URDFInertialFrame();
 
 	}
 

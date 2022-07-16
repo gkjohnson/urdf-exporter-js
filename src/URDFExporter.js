@@ -236,46 +236,46 @@ export class URDFExporter {
 				const mesh = children[ 0 ];
 				if ( mesh.geometry.isSphereGeometry ) {
 
-                    // sphere
-                    result += `${ indent4 }${ getRelativeOriginNode( mesh, parentJoint ) }`;
+					// sphere
+					result += `${ indent4 }${ getRelativeOriginNode( mesh, parentJoint ) }`;
 
 					const radius = mesh.geometry.parameters.radius * mesh.scale.x;
-                    result += `${ indent4 }<sphere radius="${ radius }" />`;
+					result += `${ indent4 }<sphere radius="${ radius }" />`;
 
 				} else if ( mesh.geometry.isBoxGeometry ) {
 
-                    // box
-                    result += `${ indent4 }${ getRelativeOriginNode( mesh, parentJoint ) }`;
+					// box
+					result += `${ indent4 }${ getRelativeOriginNode( mesh, parentJoint ) }`;
 
 					let { width, height, depth } = mesh.geometry.parameters;
 					width *= mesh.scale.x;
 					height *= mesh.scale.y;
 					depth *= mesh.scale.z;
 
-                    result += `${ indent }<box size="${ width } ${ height } ${ depth }" />`;
+					result += `${ indent }<box size="${ width } ${ height } ${ depth }" />`;
 
 				} else if ( mesh.geometry.isCylinderGeometry ) {
 
-                    // cylinder
+					// cylinder
 					// TODO: include three.js rotation offset here
-                    result += `${ indent4 }${ getRelativeOriginNode( mesh, parentJoint ) }`;
+					result += `${ indent4 }${ getRelativeOriginNode( mesh, parentJoint ) }`;
 
-                    let { radiusTop, height } = mesh.geometry.parameters;
+					let { radiusTop, height } = mesh.geometry.parameters;
 					radiusTop *= radiusTop * mesh.scale.x;
 					height *= mesh.scale.y;
 
-                    result += `${ indent }<cylinder length="${ height }" radius="${ radius }" />`;
+					result += `${ indent }<cylinder length="${ height }" radius="${ radius }" />`;
 
 				}
 
 			}
 
-            if ( result === '' ) {
+			if ( result === '' ) {
 
-                // mesh
-                result += `${ indent4 }${ getRelativeOriginNode( node, parentJoint ) }`;
+				// mesh
+				result += `${ indent4 }${ getRelativeOriginNode( node, parentJoint ) }`;
 
-                const path = processGeometryCallback( node );
+				const path = processGeometryCallback( node );
 				if ( path !== null ) {
 
 					result += `${ indent4 }<geometry><mesh filename="${ path }"/></geometry>`;
