@@ -82,13 +82,13 @@ export class URDFExporter {
 
 		processLink( root );
 
-		result += `<robot name="${ root.robotName || 'robot' }>`;
+		result += `<robot name="${ root.robotName || 'robot' }>\n`;
 
 		result += linkNodes.join( '' );
 
 		result += jointNodes.join( '' );
 
-		result += '</robot>';
+		result += '</robot>\n';
 
 		return result;
 
@@ -105,34 +105,34 @@ export class URDFExporter {
 				if ( mesh.geometry.isSphereGeometry ) {
 
 					// sphere
-					result += `${ indent4 }${ getRelativeOriginNode( mesh, relativeParent ) }`;
+					result += `${ indent3 }${ getRelativeOriginNode( mesh, relativeParent ) }`;
 
 					const radius = mesh.geometry.parameters.radius * mesh.scale.x;
-					result += `${ indent4 }<sphere radius="${ radius }" />`;
+					result += `${ indent3 }<sphere radius="${ radius }" />\n`;
 
 				} else if ( mesh.geometry.isBoxGeometry ) {
 
 					// box
-					result += `${ indent4 }${ getRelativeOriginNode( mesh, relativeParent ) }`;
+					result += `${ indent3 }${ getRelativeOriginNode( mesh, relativeParent ) }`;
 
 					let { width, height, depth } = mesh.geometry.parameters;
 					width *= mesh.scale.x;
 					height *= mesh.scale.y;
 					depth *= mesh.scale.z;
 
-					result += `${ indent }<box size="${ width } ${ height } ${ depth }" />`;
+					result += `${ indent3 }<box size="${ width } ${ height } ${ depth }" />\n`;
 
 				} else if ( mesh.geometry.isCylinderGeometry ) {
 
 					// cylinder
 					// TODO: include three.js rotation offset here
-					result += `${ indent4 }${ getRelativeOriginNode( mesh, relativeParent ) }`;
+					result += `${ indent3 }${ getRelativeOriginNode( mesh, relativeParent ) }`;
 
 					let { radiusTop, height } = mesh.geometry.parameters;
 					radiusTop *= radiusTop * mesh.scale.x;
 					height *= mesh.scale.y;
 
-					result += `${ indent }<cylinder length="${ height }" radius="${ radiusTop }" />`;
+					result += `${ indent3 }<cylinder length="${ height }" radius="${ radiusTop }" />\n`;
 
 				}
 
@@ -141,12 +141,11 @@ export class URDFExporter {
 			if ( result === '' ) {
 
 				// mesh
-				result += `${ indent4 }${ getRelativeOriginNode( node, relativeParent ) }`;
-
 				const path = processGeometryCallback( node );
 				if ( path !== null ) {
 
-					result += `${ indent4 }<geometry><mesh filename="${ path }"/></geometry>`;
+					result += `${ indent3 }${ getRelativeOriginNode( node, relativeParent ) }`;
+					result += `${ indent3 }<geometry><mesh filename="${ path }"/></geometry>\n`;
 
 				}
 
@@ -160,7 +159,7 @@ export class URDFExporter {
 		function processLink( link ) {
 
 			let result = '';
-			result += `${ indent1 }<link name="${ nameMap.get( link ) }">`;
+			result += `${ indent1 }<link name="${ nameMap.get( link ) }">\n`;
 
 			// inertia
 			const inertial = link.inertial;
@@ -169,11 +168,11 @@ export class URDFExporter {
 				const { origin, rotation, mass, inertia } = inertial;
 				_euler.copy( rotation ).reorder( 'zyx' );
 
-				result += `${ indent2 }<inertial>`;
-				result += `${ indent3 }<origin xyz="${ origin.x } ${ origin.y } ${ origin.z }" rpy="${ _euler.x } ${ _euler.y } ${ _euler.z }" />`;
-				result += `${ indent3 }<mass value="${ mass }/>`;
+				result += `${ indent2 }<inertial>\n`;
+				result += `${ indent3 }<origin xyz="${ origin.x } ${ origin.y } ${ origin.z }" rpy="${ _euler.x } ${ _euler.y } ${ _euler.z }" />\n`;
+				result += `${ indent3 }<mass value="${ mass }/>\n`;
 				result += `${ indent3 }${ getInertiaNode( inertia ) }`;
-				result += `${ indent2 }</inertial>`;
+				result += `${ indent2 }</inertial>\n`;
 
 			}
 
@@ -186,29 +185,40 @@ export class URDFExporter {
 
 				} else if ( child.isURDFVisual ) {
 
-					result += `${ indent3 }<visual`;
-					if ( child.name ) {
+					const contents = processVisualContents( child );
 
-						result += ` name="${ child.name }"`;
+					if ( contents !== '' ) {
+
+						result += `${ indent2 }<visual`;
+						if ( child.name ) {
+
+							result += ` name="${ child.name }"`;
+
+						}
+
+						result += '>\n';
+						result += contents;
+						result += `${ indent2 }</visual>\n`;
 
 					}
-
-					result += '/>';
-					result += processVisualContents( child );
-					result += `${ indent3 }<visual>`;
 
 				} else if ( child.isURDFCollider ) {
 
-					result += `${ indent3 }<collider`;
-					if ( child.name ) {
+					const contents = processVisualContents( child );
+					if ( contents !== '' ) {
 
-						result += ` name="${ child.name }"`;
+						result += `${ indent2 }<collider`;
+						if ( child.name ) {
+
+							result += ` name="${ child.name }"`;
+
+						}
+
+						result += '>\n';
+						result += contents;
+						result += `${ indent2 }</collider>\n`;
 
 					}
-
-					result += '/>';
-					result += processVisualContents( child );
-					result += `${ indent3 }<collider>`;
 
 				} else {
 
@@ -218,7 +228,7 @@ export class URDFExporter {
 
 			} );
 
-			result += `${ indent1 }</link>`;
+			result += `${ indent1 }</link>\n`;
 			linkNodes.push( result );
 
 		}
@@ -264,18 +274,18 @@ export class URDFExporter {
 
 			// construct teh node
 			let result = '';
-			result += `${ indent1 }<joint name="${ nameMap.get( joint ) }" type="${ joint.jointType || 'fixed' }">`;
+			result += `${ indent1 }<joint name="${ nameMap.get( joint ) }" type="${ joint.jointType || 'fixed' }">\n`;
 
 			result += `${ indent2 }${ getRelativeOriginNode( joint, parentJoint || parentLink ) }`;
 
-			result += `${ indent2 }<parent link="${ parentLink.name }"/>`;
+			result += `${ indent2 }<parent link="${ parentLink.name }"/>\n`;
 
-			result += `${ indent2 }<child link="${ childLink.name }"/>`;
+			result += `${ indent2 }<child link="${ childLink.name }"/>\n`;
 
 			if ( joint.jointType === 'revolute' || joint.jointType === 'continuous' || joint.jointType === 'prismatic' ) {
 
 				const axis = joint.axis;
-				result += `${ indent2 }<axis xyz="${ axis.x } ${ axis.y } ${ axis.z }"/>`;
+				result += `${ indent2 }<axis xyz="${ axis.x } ${ axis.y } ${ axis.z }"/>\n`;
 
 			}
 
@@ -290,13 +300,15 @@ export class URDFExporter {
 
 				}
 
-				result += '/>';
+				result += '/>\n';
 
 			}
 
-			result += `${ indent1 }</joint>`;
+			result += `${ indent1 }</joint>\n`;
 
 			jointNodes.push( result );
+
+			processLink( childLink );
 
 		}
 

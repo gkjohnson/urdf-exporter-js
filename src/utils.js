@@ -31,9 +31,9 @@ export function getRelativeOriginNode( root, parent ) {
 export function getOriginNode( matrix ) {
 
 	matrix.decompose( _position, _quaternion, _scale );
-	_euler.setFromQuaternion( _quaternion, 'zyx' );
+	_euler.setFromQuaternion( _quaternion, 'ZYX' );
 
-	return `<origin xyz="${ _position.x } ${ _position.y } ${ _position.z }" rpy="${ _euler.x } ${ _euler.y } ${ _euler.z }"/>`;
+	return `<origin xyz="${ _position.x } ${ _position.y } ${ _position.z }" rpy="${ _euler.x } ${ _euler.y } ${ _euler.z }"/>\n`;
 
 }
 
@@ -162,7 +162,7 @@ export function getInertiaNode( matrix ) {
 	const yz = getMatrixElement( matrix, 1, 2 );
 
 
-	return `<inertia ixx=${ xx } iyy=${ yy } izz=${ zz } ixy=${ xy } ixz=${ xz } iyz=${ yz } />`;
+	return `<inertia ixx=${ xx } iyy=${ yy } izz=${ zz } ixy=${ xy } ixz=${ xz } iyz=${ yz } />\n`;
 
 }
 
