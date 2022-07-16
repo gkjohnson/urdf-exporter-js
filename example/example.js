@@ -1,13 +1,15 @@
-/* global URDFLoader URDFExporter URDFViewer THREE JSZip */
-
-import { URDFExporter } from './src/URDFExporter';
+import { URDFExporter } from '../src/index.js';
+import URDFLoader from 'urdf-loader';
+import URDFViewer from 'urdf-loader/src/urdf-viewer-element.js';
+import * as THREE from 'three';
 
 customElements.define( 'urdf-viewer', URDFViewer );
 const exporter = new URDFExporter();
 const loader = new URDFLoader();
 const el = document.querySelector( 'urdf-viewer' );
 
-loader.load( './urdf/r2_description/robots/r2b.URDF', './urdf', robot => {
+const url = 'https://raw.githubusercontent.com/gkjohnson/urdf-loaders/master/urdf/T12/urdf/T12.URDF';
+loader.load( url, robot => {
 
 	// time out so the meshes have had time to load
 	// we should have an event on the parser for when all
@@ -18,7 +20,8 @@ loader.load( './urdf/r2_description/robots/r2b.URDF', './urdf', robot => {
 	setTimeout( () => {
 
 		const exporter = new URDFExporter();
-		exporter.parse( robot );
+		const res = exporter.parse( robot );
+		console.log(res);
 
 
 
