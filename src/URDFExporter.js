@@ -94,7 +94,7 @@ export class URDFExporter {
 
 		function processVisualContents( node ) {
 
-			const parentJoint = getParentJoint( node );
+			const relativeParent = getParentJoint( node ) || node;
 			const children = node.children;
 			let result = '';
 
@@ -105,7 +105,7 @@ export class URDFExporter {
 				if ( mesh.geometry.isSphereGeometry ) {
 
 					// sphere
-					result += `${ indent4 }${ getRelativeOriginNode( mesh, parentJoint ) }`;
+					result += `${ indent4 }${ getRelativeOriginNode( mesh, relativeParent ) }`;
 
 					const radius = mesh.geometry.parameters.radius * mesh.scale.x;
 					result += `${ indent4 }<sphere radius="${ radius }" />`;
@@ -113,7 +113,7 @@ export class URDFExporter {
 				} else if ( mesh.geometry.isBoxGeometry ) {
 
 					// box
-					result += `${ indent4 }${ getRelativeOriginNode( mesh, parentJoint ) }`;
+					result += `${ indent4 }${ getRelativeOriginNode( mesh, relativeParent ) }`;
 
 					let { width, height, depth } = mesh.geometry.parameters;
 					width *= mesh.scale.x;
@@ -126,7 +126,7 @@ export class URDFExporter {
 
 					// cylinder
 					// TODO: include three.js rotation offset here
-					result += `${ indent4 }${ getRelativeOriginNode( mesh, parentJoint ) }`;
+					result += `${ indent4 }${ getRelativeOriginNode( mesh, relativeParent ) }`;
 
 					let { radiusTop, height } = mesh.geometry.parameters;
 					radiusTop *= radiusTop * mesh.scale.x;
@@ -141,7 +141,7 @@ export class URDFExporter {
 			if ( result === '' ) {
 
 				// mesh
-				result += `${ indent4 }${ getRelativeOriginNode( node, parentJoint ) }`;
+				result += `${ indent4 }${ getRelativeOriginNode( node, relativeParent ) }`;
 
 				const path = processGeometryCallback( node );
 				if ( path !== null ) {
@@ -266,7 +266,7 @@ export class URDFExporter {
 			let result = '';
 			result += `${ indent1 }<joint name="${ nameMap.get( joint ) }" type="${ joint.jointType || 'fixed' }">`;
 
-			result += `${ indent2 }${ getRelativeOriginNode( joint, parentJoint ) }`;
+			result += `${ indent2 }${ getRelativeOriginNode( joint, parentJoint || parentLink ) }`;
 
 			result += `${ indent2 }<parent link="${ parentLink.name }"/>`;
 
