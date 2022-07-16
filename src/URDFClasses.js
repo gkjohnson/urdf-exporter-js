@@ -1,4 +1,4 @@
-import { Matrix3, Object3D, Vector3 } from 'three';
+import { Matrix3, Object3D, Vector3, Euler } from 'three';
 
 class URDFBase extends Object3D {
 

@@ -1,3 +1,5 @@
+import { Euler, Quaternion, Vector3, Matrix4 } from 'three';
+
 const _euler = new Euler();
 const _quaternion = new Quaternion();
 const _scale = new Vector3();

@@ -1,5 +1,6 @@
 import { Euler } from 'three';
-import {getChildLink,
+import {
+	getChildLink,
 	getOriginNode,
 	getParentJoint,
 	getParentLink,
@@ -131,7 +132,7 @@ export class URDFExporter {
 					radiusTop *= radiusTop * mesh.scale.x;
 					height *= mesh.scale.y;
 
-					result += `${ indent }<cylinder length="${ height }" radius="${ radius }" />`;
+					result += `${ indent }<cylinder length="${ height }" radius="${ radiusTop }" />`;
 
 				}
 
@@ -171,7 +172,7 @@ export class URDFExporter {
 				result += `${ indent2 }<inertial>`;
 				result += `${ indent3 }<origin xyz="${ origin.x } ${ origin.y } ${ origin.z }" rpy="${ _euler.x } ${ _euler.y } ${ _euler.z }" />`;
 				result += `${ indent3 }<mass value="${ mass }/>`;
-				result += `${ indent3 }${ getInertiaNode( inertia ) }`
+				result += `${ indent3 }${ getInertiaNode( inertia ) }`;
 				result += `${ indent2 }</inertial>`;
 
 			}
@@ -229,7 +230,7 @@ export class URDFExporter {
 			let totalJoints = 0;
 			let totalVisual = 0;
 			let totalCollider = 0;
-			traverseImmediateMeaningfulNodes( joint, node => {
+			traverseImmediateMeaningfulNodes( joint, child => {
 
 				if ( child.isURDFJoint ) {
 
