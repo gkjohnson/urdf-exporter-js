@@ -12,7 +12,7 @@
     "start": "concurrently --kill-others \"rollup -c -w\" \"static-server\"",
     "build": "rollup -c",
     "test": "rollup -c && jest",
-    "lint": "eslint ./src/*.js"
+    "lint": "eslint ./src/*.js ./example/*.js"
   },
   "repository": {
     "type": "git",
@@ -44,7 +44,7 @@
     "eslint-config-mdcs": "^5.0.0",
     "concurrently": "^4.0.1",
     "eslint": "^7.32.0",
-	"eslint-plugin-jest": "^23.20.0",
+		"eslint-plugin-jest": "^23.20.0",
     "jest": "^27.2.4",
     "rollup": "^0.66.6",
     "static-server": "^2.2.0",
