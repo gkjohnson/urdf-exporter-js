@@ -21,7 +21,6 @@ loader.load( url, robot => {
 
 		const exporter = new URDFExporter();
 		const res = exporter.parse( robot );
-		console.log(res);
 
 
 
