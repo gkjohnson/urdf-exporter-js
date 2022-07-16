@@ -1,150 +1,17 @@
-import { Euler, LinearMipMapNearestFilter, Matrix4, Quaternion, Vector3 } from 'three';
+import { Euler } from 'three';
+import {getChildLink,
+	getOriginNode,
+	getParentJoint,
+	getParentLink,
+	getRelativeOriginNode,
+	repeatChar,
+	traverseImmediateMeaningfulNodes,
+	traverseParents,
+	getInertiaNode,
+} from './utils.js';
 
 // http://wiki.ros.org/urdf/XML/
 const _euler = new Euler();
-const _quaternion = new Quaternion();
-const _scale = new Vector3();
-const _position = new Vector3();
-const _matrix = new Matrix4();
-
-function repeatChar( char, count ) {
-
-	let result = '';
-	for ( let i = 0; i < count; i ++ ) {
-
-		result += char;
-
-	}
-
-	return result;
-
-}
-
-// returns the transform of root relative to parent
-function getRelativeOriginNode( root, parent ) {
-
-	_matrix.copy( parent.matrixWorld ).invert().premultiply( root.matrixWorld );
-	return getOriginNode( _matrix );
-
-}
-
-// returns the origin node for the given matrix
-function getOriginNode( matrix ) {
-
-	matrix.decompose( _position, _quaternion, _scale );
-	_euler.setFromQuaternion( _quaternion, 'zyx' );
-
-	return `<origin xyz="${ _position.x } ${ _position.y } ${ _position.z }" rpy="${ _euler.x } ${ _euler.y } ${ _euler.z }"/>`;
-
-}
-
-// recursively traverses the root until reaching a URDF node. Stops if the callback returns "true".
-function traverseImmediateMeaningfulNodes( root, cb ) {
-
-	const children = root.children;
-	for ( let i = 0, l = children.length; i < l; i ++ ) {
-
-		const c = children[ i ];
-		if (
-			c.isURDFLink ||
-            c.isURDFJoint ||
-            c.isURDFCollider ||
-            c.isURDFVisual
-		) {
-
-			if ( cb( c ) === true ) {
-
-				break;
-
-			}
-
-		}
-
-	}
-
-}
-
-// recursively traverse the parent until a callback returns "true" or the robot root is found.
-function traverseParents( root, cb ) {
-
-	let curr = root.parent;
-	while ( curr ) {
-
-		if ( cb( curr ) === true ) {
-
-			break;
-
-		}
-
-		if ( curr.isURDFRobot ) {
-
-			break;
-
-		}
-
-		curr = curr.parent;
-
-	}
-
-}
-
-// returns the first found child link.
-function getChildLink( root ) {
-
-	let result = null;
-	traverseImmediateMeaningfulNodes( root, node => {
-
-		if ( node.isURDFLink ) {
-
-			result = node;
-			return true;
-
-		}
-
-	} );
-
-	return result;
-
-}
-
-// returns the first found parent link.
-function getParentLink( root ) {
-
-	let result = null;
-	traverseParents( root, node => {
-
-		if ( node.isURDFLink ) {
-
-			result = node;
-			return true;
-
-		}
-
-	} );
-
-	return result;
-
-}
-
-// returns the first found parent joint.
-function getParentJoint( root ) {
-
-	let result = null;
-	traverseParents( root, node => {
-
-		if ( node.isURDFJoint ) {
-
-			result = node;
-			return true;
-
-		}
-
-	} );
-
-	return result;
-
-}
-
 export class URDFExporter {
 
 	constructor() {
@@ -294,7 +161,20 @@ export class URDFExporter {
 			let result = '';
 			result += `${ indent1 }<link name="${ nameMap.get( link ) }">`;
 
-			// TODO: include inertial
+			// inertia
+			const inertial = link.inertial;
+			if ( inertial ) {
+
+				const { origin, rotation, mass, inertia } = inertial;
+				_euler.copy( rotation ).reorder( 'zyx' );
+
+				result += `${ indent2 }<inertial>`;
+				result += `${ indent3 }<origin xyz="${ origin.x } ${ origin.y } ${ origin.z }" rpy="${ _euler.x } ${ _euler.y } ${ _euler.z }" />`;
+				result += `${ indent3 }<mass value="${ mass }/>`;
+				result += `${ indent3 }${ getInertiaNode( inertia ) }`
+				result += `${ indent2 }</inertial>`;
+
+			}
 
 			// process any necessary child information
 			traverseImmediateMeaningfulNodes( link, child => {
