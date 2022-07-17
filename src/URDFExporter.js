@@ -1,13 +1,11 @@
 import { Euler } from 'three';
 import {
 	getChildLink,
-	getOriginNode,
 	getParentJoint,
 	getParentLink,
 	getRelativeOriginNode,
 	repeatChar,
 	traverseImmediateMeaningfulNodes,
-	traverseParents,
 	getInertiaNode,
 } from './utils.js';
 
