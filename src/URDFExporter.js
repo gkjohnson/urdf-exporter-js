@@ -139,7 +139,12 @@ export class URDFExporter {
 			if ( result === '' ) {
 
 				// mesh
-				const path = processGeometryCallback( node, parentLink );
+				const nodeClone = node.clone();
+				nodeClone.position.set( 0, 0, 0 );
+				nodeClone.rotation.set( 0, 0, 0 );
+				nodeClone.updateMatrixWorld();
+
+				const path = processGeometryCallback( nodeClone, parentLink );
 				if ( path !== null ) {
 
 					result += `${ indent3 }${ getRelativeOriginNode( node, relativeParent ) }`;
