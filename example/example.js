@@ -2,6 +2,8 @@ import { URDFExporter } from '../src/index.js';
 import URDFLoader from 'urdf-loader';
 import URDFViewer from 'urdf-loader/src/urdf-viewer-element.js';
 import * as THREE from 'three';
+import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js';
+import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 
 customElements.define( 'urdf-viewer', URDFViewer );
 const exporter = new URDFExporter();
@@ -19,35 +21,72 @@ loader.load( url, robot => {
 	// extra / unneeded nodes.
 	setTimeout( () => {
 
+		const models = {};
 		const exporter = new URDFExporter();
-		const res = exporter.parse( robot );
+		exporter.processGeometryCallback = ( root, link ) => {
+
+			const result = new STLExporter().parse( root );
+			const name = `${ link.name }.stl`;
+
+			models[ name ] = result;
+			return name;
+
+		};
+
+		const urdf = exporter.parse( robot );
+		// console.log( urdf );
+
+		// console.log( models );
 
 
 
 
 
 		// const data = exporter.parse(robot, jointFunc, { collapse: true, createMeshCb });
-		// el.loadingManager.setURLModifier(url => {
+		el.loadMeshFunc = ( url, manager, onComplete ) => {
 
-		//     if (/urdf$/i.test(url)) return URL.createObjectURL(new Blob([data.data]));
+			url = url.split( /\//g ).pop();
+			console.log( 'GOT HERE' );
+		    // if ( /urdf$/i.test( url ) ) return URL.createObjectURL( new Blob( [ urdf ] ) );
 
-		//     const mesh = data.meshes
-		//         .filter(m => new RegExp(`${ m.directory }${ m.name }\\.${ m.ext }$`).test(url))
-		//         .pop();
+			console.log( 'INN?!', url, url in models );
+			const geom = new STLLoader().parse( models[ url ] );
 
-		//     if (mesh != null) return URL.createObjectURL(new Blob([mesh.data]));
+			console.log( geom );
+			onComplete( new THREE.Mesh( geom, new THREE.MeshStandardMaterial() ) );
 
-		//     const tex = data.textures
-		//         .filter(t => new RegExp(`${ t.directory }${ t.name }\\.${ t.ext }$`).test(url))
-		//         .pop();
+			// return new URL.createObjectURL( new Blob( models[ url ] ) );
 
-		//     if (tex != null) return URL.createObjectURL(new Blob([tex.data]));
+		    // const mesh = data.meshes
+		    //     .filter( m => new RegExp( `${ m.directory }${ m.name }\\.${ m.ext }$` ).test( url ) )
+		    //     .pop();
 
-		//     return url;
+		    // if ( mesh != null ) return URL.createObjectURL( new Blob( [ mesh.data ] ) );
 
-		// });
+		    // const tex = data.textures
+		    //     .filter( t => new RegExp( `${ t.directory }${ t.name }\\.${ t.ext }$` ).test( url ) )
+		    //     .pop();
 
-		// el.urdf = 'exported.urdf';
+		    // if ( tex != null ) return URL.createObjectURL( new Blob( [ tex.data ] ) );
+
+		    // return url;
+
+		};
+
+
+		el.urdf = URL.createObjectURL( new Blob( [ urdf ] ) );
+		el.addEventListener( 'urdf-processed', () => {
+
+			const robot = el.robot;
+			for ( const key in robot.links ) {
+
+				const link = robot.links[ key ];
+				link.add( new THREE.AxesHelper() );
+
+			}
+
+
+		} );
 
 		// const zip = new JSZip();
 		// zip.file('T12.URDF', data.urdf);

@@ -82,7 +82,7 @@ export class URDFExporter {
 
 		processLink( root );
 
-		result += `<robot name="${ root.robotName || 'robot' }>\n`;
+		result += `<robot name="${ root.robotName || 'robot' }">\n`;
 
 		result += linkNodes.join( '' );
 
@@ -273,7 +273,7 @@ export class URDFExporter {
 			const parentJoint = getParentJoint( joint );
 			const childLink = getChildLink( joint );
 
-			// construct teh node
+			// construct the node
 			let result = '';
 			result += `${ indent1 }<joint name="${ nameMap.get( joint ) }" type="${ joint.jointType || 'fixed' }">\n`;
 
@@ -297,7 +297,7 @@ export class URDFExporter {
 				result += `${ indent2 }<limit effort="${ limit.effort || 0 }" velocity="${ limit.velocity || 0 }"`;
 				if ( joint.jointType !== 'continuous' && 'lower' in limit && 'upper' in limit ) {
 
-					result += `lower="${ limit.lower }" upper="${ limit.upper }"`;
+					result += ` lower="${ limit.lower }" upper="${ limit.upper }"`;
 
 				}
 
