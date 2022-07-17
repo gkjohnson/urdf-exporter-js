@@ -41,6 +41,7 @@ manager.onLoad = () => {
 	if ( params.get( 'renderSource' ) ) {
 
 		el.urdf = url;
+		el.loadMeshFunc = new URDFLoader().defaultMeshLoader;
 
 	} else {
 
