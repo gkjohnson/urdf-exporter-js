@@ -6,7 +6,6 @@ import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 
 customElements.define( 'urdf-viewer', URDFViewer );
-const loader = new URDFLoader();
 const el = document.querySelector( 'urdf-viewer' );
 
 const params = new URLSearchParams( window.location.search );
@@ -14,8 +13,9 @@ const url =
 	params.get( 'urdf' ) ||
 	'https://raw.githubusercontent.com/gkjohnson/urdf-loaders/master/urdf/T12/urdf/T12.URDF';
 
-loader.packages = params.get( 'package' );
-loader.load( url, robot => {
+let robot = null;
+const manager = new THREE.LoadingManager();
+manager.onLoad = () => {
 
 	// time out so the meshes have had time to load
 	// we should have an event on the parser for when all
@@ -23,52 +23,54 @@ loader.load( url, robot => {
 
 	robot.updateMatrixWorld();
 
-	// because we're loading from a URDFParser data here, there will be a lot of
-	// extra / unneeded nodes.
-	setTimeout( () => {
+	const models = {};
+	const exporter = new URDFExporter();
+	exporter.processGeometryCallback = ( root, link ) => {
 
-		const models = {};
-		const exporter = new URDFExporter();
-		exporter.processGeometryCallback = ( root, link ) => {
+		const result = new STLExporter().parse( root );
+		const name = `${ link.name.replace( /\//g, '_' ) }.stl`;
 
-			const result = new STLExporter().parse( root );
-			const name = `${ link.name.replace( /\//g, '_' ) }.stl`;
+		models[ name ] = result;
+		return name;
 
-			models[ name ] = result;
-			return name;
+	};
+
+	const urdf = exporter.parse( robot );
+	console.log( urdf );
+
+	if ( params.get( 'renderSource' ) ) {
+
+		el.urdf = url;
+
+	} else {
+
+		el.loadMeshFunc = ( url, manager, onComplete ) => {
+
+			url = url.split( /\//g ).pop();
+			const geom = new STLLoader().parse( models[ url ] );
+			onComplete( new THREE.Mesh( geom, new THREE.MeshStandardMaterial() ) );
 
 		};
 
-		const urdf = exporter.parse( robot );
-		console.log( urdf );
+		el.urdf = URL.createObjectURL( new Blob( [ urdf ] ) );
 
-		if ( params.get( 'renderSource' ) ) {
+	}
 
-			el.urdf = url;
+	// const zip = new JSZip();
+	// zip.file('T12.URDF', data.urdf);
+	// data.meshes.forEach(m => zip.file(`${ m.directory }${ m.name }.${ m.ext }`, m.data));
+	// data.textures.forEach(t => zip.file(`${ t.directory }${ t.name }.${ t.ext }`, t.data));
 
-		} else {
+	// zip
+	//     .generateAsync({ type: 'uint8array' })
+	//     .then(zipdata => saveData(zipdata, 't12urdf.zip'));
 
-			el.loadMeshFunc = ( url, manager, onComplete ) => {
+};
 
-				url = url.split( /\//g ).pop();
-				const geom = new STLLoader().parse( models[ url ] );
-				onComplete( new THREE.Mesh( geom, new THREE.MeshStandardMaterial() ) );
+const loader = new URDFLoader( manager );
+loader.packages = params.get( 'package' );
+loader.load( url, result => {
 
-			};
-
-			el.urdf = URL.createObjectURL( new Blob( [ urdf ] ) );
-
-		}
-
-		// const zip = new JSZip();
-		// zip.file('T12.URDF', data.urdf);
-		// data.meshes.forEach(m => zip.file(`${ m.directory }${ m.name }.${ m.ext }`, m.data));
-		// data.textures.forEach(t => zip.file(`${ t.directory }${ t.name }.${ t.ext }`, t.data));
-
-		// zip
-		//     .generateAsync({ type: 'uint8array' })
-		//     .then(zipdata => saveData(zipdata, 't12urdf.zip'));
-
-	}, 3000 );
+	robot = result;
 
 } );
