@@ -1,4 +1,4 @@
-import { Euler } from 'three';
+import { Euler, SphereGeometry, BoxGeometry, CylinderGeometry } from 'three';
 import {
 	getChildLink,
 	getParentJoint,
@@ -100,7 +100,7 @@ export class URDFExporter {
 			if ( children.length === 1.0 && children[ 0 ].isMesh ) {
 
 				const mesh = children[ 0 ];
-				if ( mesh.geometry.isSphereGeometry ) {
+				if ( mesh.geometry instanceof SphereGeometry ) {
 
 					// sphere
 					result += `${ indent3 }${ getRelativeOriginNode( mesh, relativeParent ) }`;
@@ -108,7 +108,7 @@ export class URDFExporter {
 					const radius = mesh.geometry.parameters.radius * mesh.scale.x;
 					result += `${ indent3 }<sphere radius="${ radius }" />\n`;
 
-				} else if ( mesh.geometry.isBoxGeometry ) {
+				} else if ( mesh.geometry instanceof BoxGeometry ) {
 
 					// box
 					result += `${ indent3 }${ getRelativeOriginNode( mesh, relativeParent ) }`;
@@ -120,7 +120,7 @@ export class URDFExporter {
 
 					result += `${ indent3 }<box size="${ width } ${ height } ${ depth }" />\n`;
 
-				} else if ( mesh.geometry.isCylinderGeometry ) {
+				} else if ( mesh.geometry instanceof CylinderGeometry ) {
 
 					// cylinder
 					// TODO: include three.js rotation offset here
