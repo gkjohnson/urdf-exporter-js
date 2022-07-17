@@ -9,10 +9,12 @@ customElements.define( 'urdf-viewer', URDFViewer );
 const loader = new URDFLoader();
 const el = document.querySelector( 'urdf-viewer' );
 
+const params = new URLSearchParams( window.location.search );
 const url =
-	window.location.hash.replace( /^#/, '' ) ||
+	params.get( 'urdf' ) ||
 	'https://raw.githubusercontent.com/gkjohnson/urdf-loaders/master/urdf/T12/urdf/T12.URDF';
 
+loader.packages = params.get( 'package' );
 loader.load( url, robot => {
 
 	// time out so the meshes have had time to load
@@ -30,7 +32,7 @@ loader.load( url, robot => {
 		exporter.processGeometryCallback = ( root, link ) => {
 
 			const result = new STLExporter().parse( root );
-			const name = `${ link.name }.stl`;
+			const name = `${ link.name.replace( /\//g, '_' ) }.stl`;
 
 			models[ name ] = result;
 			return name;
@@ -38,16 +40,25 @@ loader.load( url, robot => {
 		};
 
 		const urdf = exporter.parse( robot );
-		el.loadMeshFunc = ( url, manager, onComplete ) => {
+		console.log( urdf );
 
-			url = url.split( /\//g ).pop();
-			const geom = new STLLoader().parse( models[ url ] );
-			onComplete( new THREE.Mesh( geom, new THREE.MeshStandardMaterial() ) );
+		if ( params.get( 'renderSource' ) ) {
 
-		};
+			el.urdf = url;
 
+		} else {
 
-		el.urdf = URL.createObjectURL( new Blob( [ urdf ] ) );
+			el.loadMeshFunc = ( url, manager, onComplete ) => {
+
+				url = url.split( /\//g ).pop();
+				const geom = new STLLoader().parse( models[ url ] );
+				onComplete( new THREE.Mesh( geom, new THREE.MeshStandardMaterial() ) );
+
+			};
+
+			el.urdf = URL.createObjectURL( new Blob( [ urdf ] ) );
+
+		}
 
 		// const zip = new JSZip();
 		// zip.file('T12.URDF', data.urdf);
