@@ -22,7 +22,7 @@ export function repeatChar( char, count ) {
 // returns the transform of root relative to parent
 export function getRelativeOriginNode( root, parent ) {
 
-	_matrix.copy( parent.matrixWorld ).invert().premultiply( root.matrixWorld );
+	_matrix.copy( parent.matrixWorld ).invert().multiply( root.matrixWorld );
 	return getOriginNode( _matrix );
 
 }

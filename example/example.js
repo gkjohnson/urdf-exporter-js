@@ -1,6 +1,6 @@
 import { URDFExporter } from '../src/index.js';
 import URDFLoader from 'urdf-loader';
-import URDFViewer from 'urdf-loader/src/urdf-viewer-element.js';
+import URDFViewer from 'urdf-loader/src/urdf-manipulator-element.js';
 import * as THREE from 'three';
 import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
@@ -46,18 +46,6 @@ loader.load( url, robot => {
 
 
 		el.urdf = URL.createObjectURL( new Blob( [ urdf ] ) );
-		el.addEventListener( 'urdf-processed', () => {
-
-			const robot = el.robot;
-			for ( const key in robot.links ) {
-
-				const link = robot.links[ key ];
-				link.add( new THREE.AxesHelper() );
-
-			}
-
-
-		} );
 
 		// const zip = new JSZip();
 		// zip.file('T12.URDF', data.urdf);
