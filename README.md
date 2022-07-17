@@ -11,6 +11,30 @@ Utility for exporting a three.js object hierarchy as a URDF.
 
 # Use
 
+```js
+import { URDFExporter } from 'urdf-exporter';
+import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js';
+
+let urdfModel;
+// ... create a model using the URDF classes for export
+
+const models = {};
+const exporter = new URDFExporter();
+exporter.processGeometryCallback = ( model, link ) => {
+
+	const name = `${ link.name }_mesh.stl`;
+	models[ name ] = new STLExporter().parse( model );
+	return name;
+
+};
+
+const urdf = exporter.parse( urdfModel );
+
+// ... urdf content ready!
+
+```
+
+
 # API
 
 ## URDFExporter
