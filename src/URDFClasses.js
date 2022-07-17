@@ -74,6 +74,19 @@ class URDFLink extends URDFBase {
 
 }
 
+class URDFLimit {
+
+	constructor() {
+
+		this.lower = 0;
+		this.upper = 0;
+		this.effort = 0;
+		this.velocity = 0;
+
+	}
+
+}
+
 class URDFJoint extends URDFBase {
 
 	constructor( ...args ) {
@@ -85,7 +98,7 @@ class URDFJoint extends URDFBase {
 
 		this.jointType = 'fixed';
 		this.axis = new Vector3( 1, 0, 0 );
-		this.limit = { lower: 0, upper: 0 };
+		this.limit = new URDFLimit();
 
 	}
 
