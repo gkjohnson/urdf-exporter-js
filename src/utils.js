@@ -5,6 +5,7 @@ const _quaternion = new Quaternion();
 const _scale = new Vector3();
 const _position = new Vector3();
 const _matrix = new Matrix4();
+const _cylinderMatrix = new Matrix4();
 
 export function repeatChar( char, count ) {
 
@@ -16,6 +17,16 @@ export function repeatChar( char, count ) {
 	}
 
 	return result;
+
+}
+
+// get the relative origin for a cylinder with a 90 degree rotation
+export function getCylinderRelativeOriginNode( root, parent ) {
+
+	_cylinderMatrix.makeRotationX( - Math.PI / 2 );
+	_matrix.copy( parent.matrixWorld ).invert().multiply( root.matrixWorld ).multiply( _cylinderMatrix );
+
+	return getOriginNode( _matrix );
 
 }
 

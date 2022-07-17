@@ -4,6 +4,7 @@ import {
 	getParentJoint,
 	getParentLink,
 	getRelativeOriginNode,
+	getCylinderRelativeOriginNode,
 	repeatChar,
 	traverseImmediateMeaningfulNodes,
 	getInertiaNode,
@@ -124,7 +125,7 @@ export class URDFExporter {
 
 					// cylinder
 					// TODO: include three.js rotation offset here
-					result += `${ indent3 }${ getRelativeOriginNode( mesh, relativeParent ) }`;
+					result += `${ indent3 }${ getCylinderRelativeOriginNode( mesh, relativeParent ) }`;
 
 					let { radiusTop, height } = mesh.geometry.parameters;
 					radiusTop *= radiusTop * mesh.scale.x;
