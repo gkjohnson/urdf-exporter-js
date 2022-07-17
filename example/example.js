@@ -10,7 +10,10 @@ const exporter = new URDFExporter();
 const loader = new URDFLoader();
 const el = document.querySelector( 'urdf-viewer' );
 
-const url = 'https://raw.githubusercontent.com/gkjohnson/urdf-loaders/master/urdf/T12/urdf/T12.URDF';
+const url =
+	window.location.hash.replace( /^#/, '' ) ||
+	'https://raw.githubusercontent.com/gkjohnson/urdf-loaders/master/urdf/T12/urdf/T12.URDF';
+
 loader.load( url, robot => {
 
 	// time out so the meshes have had time to load
