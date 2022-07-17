@@ -33,7 +33,7 @@ export function getOriginNode( matrix ) {
 	matrix.decompose( _position, _quaternion, _scale );
 	_euler.setFromQuaternion( _quaternion, 'ZYX' );
 
-	return `<origin xyz="${ _position.x } ${ _position.y } ${ _position.z }" rpy="${ _euler.x } ${ _euler.y } ${ _euler.z }"/>\n`;
+	return `<origin xyz="${ _position.x } ${ _position.y } ${ _position.z }" rpy="${ _euler.x } ${ _euler.y } ${ _euler.z }" />\n`;
 
 }
 

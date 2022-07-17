@@ -6,7 +6,6 @@ import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 
 customElements.define( 'urdf-viewer', URDFViewer );
-const exporter = new URDFExporter();
 const loader = new URDFLoader();
 const el = document.querySelector( 'urdf-viewer' );
 
