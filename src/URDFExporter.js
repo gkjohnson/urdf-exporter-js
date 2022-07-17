@@ -106,7 +106,7 @@ export class URDFExporter {
 					result += `${ indent3 }${ getRelativeOriginNode( mesh, relativeParent ) }`;
 
 					const radius = mesh.geometry.parameters.radius * mesh.scale.x;
-					result += `${ indent3 }<sphere radius="${ radius }" />\n`;
+					result += `${ indent3 }<geometry><sphere radius="${ radius }" /></geometry>\n`;
 
 				} else if ( mesh.geometry instanceof BoxGeometry ) {
 
@@ -118,7 +118,7 @@ export class URDFExporter {
 					height *= mesh.scale.y;
 					depth *= mesh.scale.z;
 
-					result += `${ indent3 }<box size="${ width } ${ height } ${ depth }" />\n`;
+					result += `${ indent3 }<geometry><box size="${ width } ${ height } ${ depth }" /></geometry>\n`;
 
 				} else if ( mesh.geometry instanceof CylinderGeometry ) {
 
@@ -130,7 +130,7 @@ export class URDFExporter {
 					radiusTop *= radiusTop * mesh.scale.x;
 					height *= mesh.scale.y;
 
-					result += `${ indent3 }<cylinder length="${ height }" radius="${ radiusTop }" />\n`;
+					result += `${ indent3 }<geometry><cylinder length="${ height }" radius="${ radiusTop }" /></geometry>\n`;
 
 				}
 
