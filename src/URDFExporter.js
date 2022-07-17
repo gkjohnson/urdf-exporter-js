@@ -86,6 +86,8 @@ export class URDFExporter {
 
 		result += jointNodes.join( '' );
 
+		result += '<?xml version="1.0"?>\n';
+
 		result += '</robot>\n';
 
 		return result;
