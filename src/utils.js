@@ -144,13 +144,15 @@ export function getParentJoint( root ) {
 
 }
 
-function getMatrixElement( matrix, x, y ) {
+// returns a matrix i, j element of the matrix
+function getMatrixElement( matrix, i, j ) {
 
 	const { elements } = matrix;
-	return elements[ x + y * 4 ];
+	return elements[ i + j * 4 ];
 
 }
 
+// returns the inertia matrix
 export function getInertiaNode( matrix ) {
 
 	const xx = getMatrixElement( matrix, 0, 0 );
@@ -160,7 +162,6 @@ export function getInertiaNode( matrix ) {
 	const xy = getMatrixElement( matrix, 0, 1 );
 	const xz = getMatrixElement( matrix, 0, 2 );
 	const yz = getMatrixElement( matrix, 1, 2 );
-
 
 	return `<inertia ixx=${ xx } iyy=${ yy } izz=${ zz } ixy=${ xy } ixz=${ xz } iyz=${ yz } />\n`;
 

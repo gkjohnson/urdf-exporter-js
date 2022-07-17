@@ -31,7 +31,6 @@ export class URDFExporter {
 		const indent1 = repeatChar( indent, 1 );
 		const indent2 = repeatChar( indent, 2 );
 		const indent3 = repeatChar( indent, 3 );
-		const indent4 = repeatChar( indent, 4 );
 
 		let result = '';
 		if ( ! root.isURDFRobot ) {
