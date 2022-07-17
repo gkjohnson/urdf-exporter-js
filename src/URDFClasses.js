@@ -76,47 +76,6 @@ class URDFLink extends URDFBase {
 
 class URDFJoint extends URDFBase {
 
-	get jointType() {
-
-		return this._jointType;
-
-	}
-
-	set jointType( v ) {
-
-		if ( this.jointType === v ) return;
-		this._jointType = v;
-		this.matrixWorldNeedsUpdate = true;
-		switch ( v ) {
-
-			case 'fixed':
-				this.jointValue = [];
-				break;
-
-			case 'continuous':
-			case 'revolute':
-			case 'prismatic':
-				this.jointValue = new Array( 1 ).fill( 0 );
-				break;
-
-			case 'planar':
-				this.jointValue = new Array( 2 ).fill( 0 );
-				break;
-
-			case 'floating':
-				this.jointValue = new Array( 6 ).fill( 0 );
-				break;
-
-		}
-
-	}
-
-	get angle() {
-
-		return this.jointValue[ 0 ];
-
-	}
-
 	constructor( ...args ) {
 
 		super( ...args );

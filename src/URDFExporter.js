@@ -94,7 +94,8 @@ export class URDFExporter {
 
 		function processVisualContents( node ) {
 
-			const relativeParent = getParentJoint( node ) || node;
+			const parentLink = getParentLink( node );
+			const relativeParent = getParentJoint( node ) || parentLink;
 			const children = node.children;
 			let result = '';
 
@@ -141,7 +142,7 @@ export class URDFExporter {
 			if ( result === '' ) {
 
 				// mesh
-				const path = processGeometryCallback( node );
+				const path = processGeometryCallback( node, parentLink );
 				if ( path !== null ) {
 
 					result += `${ indent3 }${ getRelativeOriginNode( node, relativeParent ) }`;
@@ -290,13 +291,13 @@ export class URDFExporter {
 			}
 
 			// TODO: include more limits?
-			if ( joint.limits ) {
+			if ( joint.limit ) {
 
-				const limits = joint.limits;
-				result += `${ indent2 }<limit effort="${ limits.effort || 0 }" velocity="${ limits.velocity }"`;
-				if ( joint.jointType !== 'continuous' && 'lower' in limits && 'upper' in limits ) {
+				const limit = joint.limit;
+				result += `${ indent2 }<limit effort="${ limit.effort || 0 }" velocity="${ limit.velocity || 0 }"`;
+				if ( joint.jointType !== 'continuous' && 'lower' in limit && 'upper' in limit ) {
 
-					result += `lower="${ limits.lower }" upper="${ limits.upper }`;
+					result += `lower="${ limit.lower }" upper="${ limit.upper }"`;
 
 				}
 
