@@ -17,6 +17,8 @@ loader.load( url, robot => {
 	// we should have an event on the parser for when all
 	// meshes have loaded
 
+	robot.updateMatrixWorld();
+
 	// because we're loading from a URDFParser data here, there will be a lot of
 	// extra / unneeded nodes.
 	setTimeout( () => {
@@ -34,42 +36,11 @@ loader.load( url, robot => {
 		};
 
 		const urdf = exporter.parse( robot );
-		// console.log( urdf );
-
-		// console.log( models );
-
-
-
-
-
-		// const data = exporter.parse(robot, jointFunc, { collapse: true, createMeshCb });
 		el.loadMeshFunc = ( url, manager, onComplete ) => {
 
 			url = url.split( /\//g ).pop();
-			console.log( 'GOT HERE' );
-		    // if ( /urdf$/i.test( url ) ) return URL.createObjectURL( new Blob( [ urdf ] ) );
-
-			console.log( 'INN?!', url, url in models );
 			const geom = new STLLoader().parse( models[ url ] );
-
-			console.log( geom );
 			onComplete( new THREE.Mesh( geom, new THREE.MeshStandardMaterial() ) );
-
-			// return new URL.createObjectURL( new Blob( models[ url ] ) );
-
-		    // const mesh = data.meshes
-		    //     .filter( m => new RegExp( `${ m.directory }${ m.name }\\.${ m.ext }$` ).test( url ) )
-		    //     .pop();
-
-		    // if ( mesh != null ) return URL.createObjectURL( new Blob( [ mesh.data ] ) );
-
-		    // const tex = data.textures
-		    //     .filter( t => new RegExp( `${ t.directory }${ t.name }\\.${ t.ext }$` ).test( url ) )
-		    //     .pop();
-
-		    // if ( tex != null ) return URL.createObjectURL( new Blob( [ tex.data ] ) );
-
-		    // return url;
 
 		};
 
