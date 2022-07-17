@@ -125,7 +125,7 @@ class URDFRobot extends URDFLink {
 		super( ...args );
 		this.isURDFRobot = true;
 
-		this.robotName = null;
+		this.robotName = '';
 
 	}
 

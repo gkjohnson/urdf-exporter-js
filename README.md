@@ -39,16 +39,98 @@ const urdf = exporter.parse( urdfModel );
 
 ## URDFExporter
 
+### .indent
+
+```js
+indent = '\t' : string
+```
+
+### .processGeometryCallback
+
+```js
+processGeometryCallback : ( node : Object3D, link : URDFLink ) => string
+```
+
+### .parse
+
+```js
+parse( root : Object3D ) : string
+```
+
 ## URDFLimit
+
+### .upper
+
+```js
+upper = 0 : Number
+```
+
+### .lower
+
+```js
+lower = 0 : Number
+```
+
+### .velocity
+
+```js
+velocity = 0 : Number
+```
+
+### .effort
+
+```js
+effort = 0 : Number
+```
 
 ## URDFInertialFrame
 
+### .position
+
+```js
+position : Vector3
+```
+
+### .rotation
+
+```js
+rotation : Euler
+```
+
+### .mass
+
+```js
+mass = 0 : Number
+```
+
+### inertia
+
+```js
+inertial : Matrix3
+```
+
 ## URDFLink
+
+_extends THREE.Object3D_
 
 ## URDFJoint
 
+_extends THREE.Object3D_
+
 ## URDFRobot
+
+_extends URDFLink_
+
+### .robotName
+
+```js
+robotName = '' : string
+```
 
 ## URDFVisual
 
+_extends THREE.Object3D_
+
 ## URDFCollider
+
+_extends THREE.Object3D_
