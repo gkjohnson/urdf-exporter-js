@@ -80,13 +80,13 @@ export class URDFExporter {
 
 		processLink( root );
 
+		result += '<?xml version="1.0"?>\n';
+
 		result += `<robot name="${ root.robotName || 'robot' }">\n`;
 
 		result += linkNodes.join( '' );
 
 		result += jointNodes.join( '' );
-
-		result += '<?xml version="1.0"?>\n';
 
 		result += '</robot>\n';
 

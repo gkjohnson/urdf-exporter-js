@@ -4,6 +4,7 @@ import URDFViewer from 'urdf-loader/src/urdf-manipulator-element.js';
 import * as THREE from 'three';
 import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
+import { saveData } from './utils.js';
 
 customElements.define( 'urdf-viewer', URDFViewer );
 const el = document.querySelector( 'urdf-viewer' );
@@ -55,6 +56,12 @@ manager.onLoad = () => {
 		};
 
 		el.urdf = URL.createObjectURL( new Blob( [ urdf ] ) );
+
+	}
+
+	if ( params.get( 'download' ) ) {
+
+		saveData( urdf, 'exported.urdf' );
 
 	}
 
