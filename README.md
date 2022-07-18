@@ -46,17 +46,23 @@ const urdf = exporter.parse( urdfModel );
 indent = '\t' : string
 ```
 
+The set of indentation characters to use.
+
 ### .processGeometryCallback
 
 ```js
 processGeometryCallback : ( node : Object3D, link : URDFLink ) => string
 ```
 
+The callback for to use when processing geometry. Geometry must be processed and cached in order to be exported. A file path is returned from the function.
+
 ### .parse
 
 ```js
 parse( root : Object3D ) : string
 ```
+
+Parses the object into a urdf file. Returns the URDF contents as a string. The hierarchy matrix world must be updated before calling this function.
 
 ## URDFLimit
 
