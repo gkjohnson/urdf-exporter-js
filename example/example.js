@@ -77,6 +77,7 @@ manager.onLoad = () => {
 };
 
 const loader = new URDFLoader( manager );
+loader.parseCollision = true;
 loader.packages = params.get( 'package' );
 loader.load( url, result => {
 

@@ -32,6 +32,7 @@ export class URDFExporter {
 		const indent1 = repeatChar( indent, 1 );
 		const indent2 = repeatChar( indent, 2 );
 		const indent3 = repeatChar( indent, 3 );
+		const indent4 = repeatChar( indent, 4 );
 
 		let result = '';
 		if ( ! root.isURDFRobot ) {
@@ -84,9 +85,11 @@ export class URDFExporter {
 
 		result += `<robot name="${ root.robotName || 'robot' }">\n`;
 
-		result += linkNodes.join( '' );
+		result += linkNodes.join( '\n' );
 
-		result += jointNodes.join( '' );
+		result += '\n';
+
+		result += jointNodes.join( '\n' );
 
 		result += '</robot>\n';
 
@@ -109,7 +112,9 @@ export class URDFExporter {
 					result += `${ indent3 }${ getRelativeOriginNode( mesh, relativeParent ) }`;
 
 					const radius = mesh.geometry.parameters.radius * mesh.scale.x;
-					result += `${ indent3 }<geometry><sphere radius="${ radius }" /></geometry>\n`;
+					result += `${ indent3 }<geometry>\n`;
+					result += `${ indent4 }<sphere radius="${ radius }" />\n`;
+					result += `${ indent3 }</geometry>\n`;
 
 				} else if ( mesh.geometry instanceof BoxGeometry ) {
 
@@ -121,7 +126,9 @@ export class URDFExporter {
 					height *= mesh.scale.y;
 					depth *= mesh.scale.z;
 
-					result += `${ indent3 }<geometry><box size="${ width } ${ height } ${ depth }" /></geometry>\n`;
+					result += `${ indent3 }<geometry>\n`;
+					result += `${ indent4 }<box size="${ width } ${ height } ${ depth }" />\n`;
+					result += `${ indent3 }</geometry>\n`;
 
 				} else if ( mesh.geometry instanceof CylinderGeometry ) {
 
@@ -133,7 +140,9 @@ export class URDFExporter {
 					radiusTop *= radiusTop * mesh.scale.x;
 					height *= mesh.scale.y;
 
-					result += `${ indent3 }<geometry><cylinder length="${ height }" radius="${ radiusTop }" /></geometry>\n`;
+					result += `${ indent3 }<geometry>\n`;
+					result += `${ indent4 }<cylinder length="${ height }" radius="${ radiusTop }" />\n`;
+					result += `${ indent3 }</geometry>\n`;
 
 				}
 
@@ -151,7 +160,9 @@ export class URDFExporter {
 				if ( path !== null ) {
 
 					result += `${ indent3 }${ getRelativeOriginNode( node, relativeParent ) }`;
-					result += `${ indent3 }<geometry><mesh filename="${ path }"/></geometry>\n`;
+					result += `${ indent3 }<geometry>\n`;
+					result += `${ indent3 }<mesh filename="${ path }"/>\n`;
+					result += `${ indent3 }</geometry>\n`;
 
 				}
 
@@ -183,11 +194,12 @@ export class URDFExporter {
 			}
 
 			// process any necessary child information
+			const childJoints = [];
 			traverseImmediateMeaningfulNodes( link, child => {
 
 				if ( child.isURDFJoint ) {
 
-					processJoint( child );
+					childJoints.push( child );
 
 				} else if ( child.isURDFVisual ) {
 
@@ -236,6 +248,12 @@ export class URDFExporter {
 
 			result += `${ indent1 }</link>\n`;
 			linkNodes.push( result );
+
+			for ( let i = 0, l = childJoints.length; i < l; i ++ ) {
+
+				processJoint( childJoints[ i ] );
+
+			}
 
 		}
 
@@ -295,8 +313,7 @@ export class URDFExporter {
 
 			}
 
-			// TODO: include more limits?
-			if ( joint.limit ) {
+			if ( joint.limit && joint.jointType !== 'fixed' ) {
 
 				const limit = joint.limit;
 				result += `${ indent2 }<limit effort="${ limit.effort || 0 }" velocity="${ limit.velocity || 0 }"`;
