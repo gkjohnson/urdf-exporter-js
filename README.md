@@ -59,12 +59,14 @@ The callback for to use when processing geometry. Geometry must be processed and
 ### .parse
 
 ```js
-parse( root : Object3D ) : string
+parse( root : URDFRobot ) : string
 ```
 
 Parses the object into a urdf file. Returns the URDF contents as a string. The hierarchy matrix world must be updated before calling this function.
 
 ## URDFLimit
+
+Class containing values to export for joint limits.
 
 ### .upper
 
@@ -92,6 +94,8 @@ effort = 0 : Number
 
 ## URDFInertialFrame
 
+Class containing values for the link inertial frame.
+
 ### .position
 
 ```js
@@ -116,9 +120,13 @@ mass = 0 : Number
 inertial : Matrix3
 ```
 
+The upper triangular matrix is used to define the `xx`, `yy`, `zz`, `xy`, `yz`, and `xz` fields.
+
 ## URDFLink
 
 _extends THREE.Object3D_
+
+When this field is encountered a new link is created in the URDF file.
 
 ### .inertial
 
@@ -129,6 +137,8 @@ inertial : URDFInertialFrame
 ## URDFJoint
 
 _extends THREE.Object3D_
+
+When this field is encountered a new joint is created in the URDF file.
 
 ### .jointType
 
@@ -151,6 +161,8 @@ limit : URDFLimit
 ## URDFRobot
 
 _extends URDFLink_
+
+A class describing the root of the URDF Robot.
 
 ### .robotName
 
