@@ -35,6 +35,15 @@ class URDFInertialFrame {
 
 	}
 
+	copy( source ) {
+
+		this.position.copy( source.position );
+		this.rotation.copy( source.rotation );
+		this.inertial.copy( source.inertial );
+		this.mass = source.mass;
+
+	}
+
 }
 
 class URDFLink extends Object3D {
@@ -49,6 +58,14 @@ class URDFLink extends Object3D {
 
 	}
 
+	copy( source, recursive ) {
+
+		super.copy( source, recursive );
+
+		this.inertial.copy( source.inertial );
+
+	}
+
 }
 
 class URDFLimit {
@@ -59,6 +76,15 @@ class URDFLimit {
 		this.upper = 0;
 		this.effort = 0;
 		this.velocity = 0;
+
+	}
+
+	copy( source ) {
+
+		this.lower = source.lower;
+		this.upper = source.upper;
+		this.effort = source.effort;
+		this.velocity = source.velocity;
 
 	}
 
@@ -76,6 +102,16 @@ class URDFJoint extends Object3D {
 		this.jointType = 'fixed';
 		this.axis = new Vector3( 1, 0, 0 );
 		this.limit = new URDFLimit();
+
+	}
+
+	copy( source, recursive ) {
+
+		super.copy( source, recursive );
+
+		this.jointType = source.jointType;
+		this.axis.copy( source.axis );
+		this.limit.copy( source.limit );
 
 	}
 
@@ -103,6 +139,14 @@ class URDFRobot extends URDFLink {
 		this.isURDFRobot = true;
 
 		this.robotName = '';
+
+	}
+
+	copy( source, recursive ) {
+
+		super.copy( source, recursive );
+
+		this.robotName = source.robotName;
 
 	}
 
