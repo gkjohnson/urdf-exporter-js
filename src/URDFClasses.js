@@ -1,29 +1,6 @@
 import { Matrix3, Object3D, Vector3, Euler } from 'three';
 
-class URDFBase extends Object3D {
-
-	constructor( ...args ) {
-
-		super( ...args );
-		this.urdfNode = null;
-		this.urdfName = '';
-
-	}
-
-	copy( source, recursive ) {
-
-		super.copy( source, recursive );
-
-		this.urdfNode = source.urdfNode;
-		this.urdfName = source.urdfName;
-
-		return this;
-
-	}
-
-}
-
-class URDFCollider extends URDFBase {
+class URDFCollider extends Object3D {
 
 	constructor( ...args ) {
 
@@ -35,7 +12,7 @@ class URDFCollider extends URDFBase {
 
 }
 
-class URDFVisual extends URDFBase {
+class URDFVisual extends Object3D {
 
 	constructor( ...args ) {
 
@@ -60,7 +37,7 @@ class URDFInertialFrame {
 
 }
 
-class URDFLink extends URDFBase {
+class URDFLink extends Object3D {
 
 	constructor( ...args ) {
 
@@ -87,7 +64,7 @@ class URDFLimit {
 
 }
 
-class URDFJoint extends URDFBase {
+class URDFJoint extends Object3D {
 
 	constructor( ...args ) {
 

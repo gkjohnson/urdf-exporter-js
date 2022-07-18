@@ -113,9 +113,33 @@ inertial : Matrix3
 
 _extends THREE.Object3D_
 
+### .inertial
+
+```js
+inertial : URDFInertialFrame
+```
+
 ## URDFJoint
 
 _extends THREE.Object3D_
+
+### .jointType
+
+```js
+jointType = 'fixed' : string
+```
+
+### .axis
+
+```js
+axis : Vector3
+```
+
+### .limit
+
+```js
+limit : URDFLimit
+```
 
 ## URDFRobot
 
