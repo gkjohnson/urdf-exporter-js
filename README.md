@@ -28,6 +28,7 @@ exporter.processGeometryCallback = ( model, link ) => {
 
 };
 
+urdfModel.updateMatrixWorld();
 const urdf = exporter.parse( urdfModel );
 
 // ... urdf content ready!
