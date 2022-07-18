@@ -7,6 +7,7 @@ import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 
 customElements.define( 'urdf-viewer', URDFViewer );
 const el = document.querySelector( 'urdf-viewer' );
+el.camera.position.set( - 5, 5, - 5 );
 
 const params = new URLSearchParams( window.location.search );
 const url =
