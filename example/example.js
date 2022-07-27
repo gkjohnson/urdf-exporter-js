@@ -43,6 +43,7 @@ manager.onLoad = () => {
 	if ( params.get( 'renderSource' ) ) {
 
 		el.urdf = url;
+		el.package = params.get( 'package' );
 		el.loadMeshFunc = new URDFLoader().defaultMeshLoader;
 
 	} else {
@@ -65,14 +66,7 @@ manager.onLoad = () => {
 
 	}
 
-	// const zip = new JSZip();
-	// zip.file('T12.URDF', data.urdf);
-	// data.meshes.forEach(m => zip.file(`${ m.directory }${ m.name }.${ m.ext }`, m.data));
-	// data.textures.forEach(t => zip.file(`${ t.directory }${ t.name }.${ t.ext }`, t.data));
 
-	// zip
-	//     .generateAsync({ type: 'uint8array' })
-	//     .then(zipdata => saveData(zipdata, 't12urdf.zip'));
 
 };
 
