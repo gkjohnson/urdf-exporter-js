@@ -38,6 +38,26 @@ const urdf = exporter.parse( urdfModel );
 
 # API
 
+## URDFGenerator
+
+Utility class to enable convenient conversion from three.js objects to URDF classes for export.
+
+### generateCallback
+
+```js
+generateCallback : ( object : Object3D ) => Object3D
+```
+
+Callback used for generating URDF class equivalents. The function is expected to return a cloned version of the provided mesh or a URDF class describing the analogous object. For example a custom three.js joint type could converted into a joint and link connection which can be run through the `URDFExporter`.
+
+### postprocessCallback
+
+```js
+postprocessCallback : ( object : URDFRobot ) => void
+```
+
+A function that takes the generated URDF result to enable fixups and other types of postprocessing that might be needed.
+
 ## URDFExporter
 
 ### .indent

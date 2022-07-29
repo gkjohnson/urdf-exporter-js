@@ -15,9 +15,13 @@ export class URDFGenerator {
 
 	constructor() {
 
-		this.traverseCallback = function( root ) {
+		this.generateCallback = function ( root ) {
 
 			return root.clone( false );
+
+		};
+
+		this.postprocessCallback = function ( root ) {
 
 		};
 
@@ -25,13 +29,18 @@ export class URDFGenerator {
 
 	generate( root ) {
 
-		function process( object, parent = null ) {
+		const process = ( object, parent = null ) => {
 
-			const resultChild = this.traverseCallback( object );
+			const resultChild = this.generateCallback( object );
 			const resultParent = getParentRoot( resultChild );
+			if ( parent !== null ) {
+
+				parent.add( resultParent );
+
+			}
 
 			const children = object.children;
-			for ( let i = 0, l = children.length; i < l; i -- ) {
+			for ( let i = 0, l = children.length; i < l; i ++ ) {
 
 				process( children[ i ], resultChild || parent );
 
@@ -39,9 +48,11 @@ export class URDFGenerator {
 
 			return resultParent;
 
-		}
+		};
 
-		return process( root );
+		const result = process( root );
+		this.postprocessCallback( root );
+		return result;
 
 	}
 
