@@ -133,7 +133,6 @@ export class URDFExporter {
 				} else if ( mesh.geometry instanceof CylinderGeometry ) {
 
 					// cylinder
-					// TODO: include three.js rotation offset here
 					result += `${ indent3 }${ getCylinderRelativeOriginNode( mesh, relativeParent ) }`;
 
 					let { radiusTop, height } = mesh.geometry.parameters;
@@ -182,12 +181,12 @@ export class URDFExporter {
 			const inertial = link.inertial;
 			if ( inertial ) {
 
-				const { origin, rotation, mass, inertia } = inertial;
-				_euler.copy( rotation ).reorder( 'zyx' );
+				const { position, rotation, mass, inertia } = inertial;
+				_euler.copy( rotation ).reorder( 'ZYX' );
 
 				result += `${ indent2 }<inertial>\n`;
-				result += `${ indent3 }<origin xyz="${ origin.x } ${ origin.y } ${ origin.z }" rpy="${ _euler.x } ${ _euler.y } ${ _euler.z }" />\n`;
-				result += `${ indent3 }<mass value="${ mass }/>\n`;
+				result += `${ indent3 }<position xyz="${ position.x } ${ position.y } ${ position.z }" rpy="${ _euler.x } ${ _euler.y } ${ _euler.z }" />\n`;
+				result += `${ indent3 }<mass value="${ mass }" />\n`;
 				result += `${ indent3 }${ getInertiaNode( inertia ) }`;
 				result += `${ indent2 }</inertial>\n`;
 

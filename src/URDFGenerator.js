@@ -52,6 +52,8 @@ export class URDFGenerator {
 
 		const result = process( root );
 		this.postprocessCallback( root );
+
+		result.updateMatrixWorld( true );
 		return result;
 
 	}

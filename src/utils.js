@@ -64,7 +64,15 @@ export function traverseImmediateMeaningfulNodes( root, cb ) {
 
 			if ( cb( c ) === true ) {
 
-				break;
+				return true;
+
+			}
+
+		} else {
+
+			if ( traverseImmediateMeaningfulNodes( c, cb ) ) {
+
+				return true;
 
 			}
 
@@ -159,7 +167,8 @@ export function getParentJoint( root ) {
 function getMatrixElement( matrix, i, j ) {
 
 	const { elements } = matrix;
-	return elements[ i + j * 4 ];
+	const dim = matrix instanceof Matrix4 ? 4 : 3;
+	return elements[ i + j * dim ];
 
 }
 
@@ -174,7 +183,7 @@ export function getInertiaNode( matrix ) {
 	const xz = getMatrixElement( matrix, 0, 2 );
 	const yz = getMatrixElement( matrix, 1, 2 );
 
-	return `<inertia ixx=${ xx } iyy=${ yy } izz=${ zz } ixy=${ xy } ixz=${ xz } iyz=${ yz } />\n`;
+	return `<inertia ixx="${ xx }" iyy="${ yy }" izz="${ zz }" ixy="${ xy }" ixz="${ xz }" iyz="${ yz }" />\n`;
 
 }
 
