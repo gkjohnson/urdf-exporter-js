@@ -31,7 +31,7 @@ class URDFInertialFrame {
 		this.position = new Vector3();
 		this.rotation = new Euler();
 		this.mass = 0;
-		this.inertial = new Matrix3();
+		this.inertia = new Matrix3();
 
 	}
 
@@ -39,7 +39,7 @@ class URDFInertialFrame {
 
 		this.position.copy( source.position );
 		this.rotation.copy( source.rotation );
-		this.inertial.copy( source.inertial );
+		this.inertia.copy( source.inertia );
 		this.mass = source.mass;
 
 	}
