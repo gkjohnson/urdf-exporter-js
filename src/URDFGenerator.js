@@ -31,7 +31,19 @@ export class URDFGenerator {
 
 		const process = ( object, parent = null ) => {
 
+			if ( object.visible === false ) {
+
+				return null;
+
+			}
+
 			const resultChild = this.generateCallback( object );
+			if ( resultChild === null ) {
+
+				return null;
+
+			}
+
 			const resultParent = getParentRoot( resultChild );
 			if ( parent !== null ) {
 
