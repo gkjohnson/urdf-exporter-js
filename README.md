@@ -38,7 +38,7 @@ const urdf = exporter.parse( urdfModel );
 
 # API
 
-## URDFGenerator
+## URDFConverter
 
 Utility class to enable convenient conversion from three.js objects to URDF classes for export.
 

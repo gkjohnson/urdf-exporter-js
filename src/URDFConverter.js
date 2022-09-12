@@ -11,7 +11,7 @@ function getParentRoot( child ) {
 
 }
 
-export class URDFGenerator {
+export class URDFConverter {
 
 	constructor() {
 
