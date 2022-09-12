@@ -1,536 +1,339 @@
-/**
- * @author Garrett Johnson / http://gkjohnson.github.io/
- * https://github.com/gkjohnson/urdf-exporter
- */
+import { Euler, SphereGeometry, BoxGeometry, CylinderGeometry } from 'three';
+import {
+	getChildLink,
+	getParentJoint,
+	getParentLink,
+	getRelativeOriginNode,
+	getCylinderRelativeOriginNode,
+	repeatChar,
+	traverseImmediateMeaningfulNodes,
+	getInertiaNode,
+} from './utils.js';
 
-import * as THREE from 'three';
-import { STLExporter } from 'three/examples/js/exporters/STLExporter';
-import { ColladaExporter } from 'three/examples/js/exporters/ColladaExporter';
-
-// THREE.js URDF Exporter
 // http://wiki.ros.org/urdf/XML/
+const _euler = new Euler();
+export class URDFExporter {
 
-export default
-class URDFExporter {
+	constructor() {
 
-    // joint func returns
-    // {
-    //   name
-    //   type
-    //   limit: { lower, upper, velocity, effort }
-    //   axis
-    //   isLeaf
-    // }
+		this.indent = '\t';
+		this.processGeometryCallback = () => {
 
-    // mesh func returns
-    // {
-    //   name,
-    //   ext,
-    //   data
-    // }
+			return null;
 
-    get STLExporter() {
+		};
 
-        return this._stlExporter = this._stlExporter || new STLExporter();
+	}
 
-    }
+	parse( root ) {
 
-    get ColladaExporter() {
+		const { indent, processGeometryCallback } = this;
 
-        return this._colladaExporter = this._colladaExporter || new ColladaExporter();
+		const indent1 = repeatChar( indent, 1 );
+		const indent2 = repeatChar( indent, 2 );
+		const indent3 = repeatChar( indent, 3 );
+		const indent4 = repeatChar( indent, 4 );
 
-    }
+		let result = '';
+		if ( ! root.isURDFRobot ) {
 
-    // Makes the provided name unique.
-    // 'map' is an object with keys of already taken names
-    _makeNameUnique(name, map, appendNum = 0) {
+			console.warn( 'URDFExporter: Root link is expected to be a URDFRobot instance.' );
 
-        const newName = `${ name }${ appendNum || '' }`;
-        return newName in map ? this._makeNameUnique(name, map, appendNum + 1) : newName;
+		}
 
-    }
+		// initialize the names of joints and links that are unnamed
+		const nameMap = new Map();
+		let linkIndex = 0;
+		let jointIndex = 0;
+		root.traverse( c => {
 
-    // Fix duplicate slashes in a file path
-    _normalizePackagePath(path) {
+			if ( c.isURDFLink ) {
 
-        return path
-            .replace(/[\\/]+/g, '/')
-            .replace(/^package:\/*/i, 'package://');
+				if ( c.name ) {
 
-    }
+					nameMap.set( c, c.name );
 
-    // The default callback for generating mesh data from a link
-    _defaultMeshCallback(o, linkName, meshFormat) {
+				} else {
 
-        if (meshFormat === 'stl') {
+					nameMap.set( c, `link_${ linkIndex ++ }` );
 
-            return {
-                name: linkName,
-                ext: 'stl',
-                data: this.STLExporter.parse(o, { binary: true }),
-                textures: [],
-                material: {
+				}
 
-                    color: o.material ? o.material.color : null,
-                    opacity: o.material && o.material.transparent ? o.material.opacity : null,
-                    texture: o.material ? o.material.map : null,
+			} else if ( c.isURDFJoint ) {
 
-                },
-            };
+				if ( c.name ) {
 
-        } else {
+					nameMap.set( c, c.name );
 
-            // TODO: dedupe the textures here
-            const res = this.ColladaExporter.parse(o, { textureDirectory: 'textures' });
-            res.textures.forEach((tex, i) => {
+				} else {
 
-                const newname = `${ linkName }-${ i }`;
-                const nameregex = new RegExp(`${ tex.name }\\.${ tex.ext }`, 'g');
+					nameMap.set( c, `joint_${ jointIndex ++ }` );
 
-                res.data = res.data.replace(nameregex, `${ newname }.${ tex.ext }`);
-                tex.name = newname;
+				}
 
-            });
+			}
 
-            return {
-                name: linkName,
-                ext: 'dae',
-                data: res.data,
-                textures: res.textures,
-            };
+		} );
 
-        }
 
-    }
+		const linkNodes = [];
+		const jointNodes = [];
 
-    _base64ToBuffer(str) {
+		processLink( root );
 
-        const b = atob(str);
-        const buf = new Uint8Array(b.length);
+		result += '<?xml version="1.0"?>\n';
 
-        for (var i = 0, l = buf.length; i < l; i++) {
+		result += `<robot name="${ root.robotName || 'robot' }">\n`;
 
-            buf[i] = b.charCodeAt(i);
+		result += linkNodes.join( '\n' );
 
-        }
+		result += '\n';
 
-        return buf;
+		result += jointNodes.join( '\n' );
 
-    }
+		result += '</robot>\n';
 
-    // Convert a texture to png image data
-    _imageToData(image, ext) {
+		return result;
 
-        this._canvas = this._canvas || document.createElement('canvas');
-        this._ctx = this._ctx || this._canvas.getContext('2d');
+		function processVisualContents( node ) {
 
-        const canvas = this._canvas;
-        const ctx = this._ctx;
+			const parentLink = getParentLink( node );
+			const relativeParent = getParentJoint( node ) || parentLink;
+			const children = node.children;
+			let result = '';
 
-        canvas.width = image.naturalWidth;
-        canvas.height = image.naturalHeight;
+			// if we have one child then it might be a geometric result
+			if ( children.length === 1.0 && children[ 0 ].isMesh ) {
 
-        ctx.drawImage(image, 0, 0);
+				const mesh = children[ 0 ];
+				if ( mesh.geometry instanceof SphereGeometry ) {
 
-        // Get the base64 encoded data
-        const base64data = canvas
-            .toDataURL(`image/${ ext }`, 1)
-            .replace(/^data:image\/(png|jpg);base64,/, '');
+					// sphere
+					result += `${ indent3 }${ getRelativeOriginNode( mesh, relativeParent ) }`;
 
-        // Convert to a uint8 array
-        return this._base64ToBuffer(base64data);
+					const radius = mesh.geometry.parameters.radius * mesh.scale.x;
+					result += `${ indent3 }<geometry>\n`;
+					result += `${ indent4 }<sphere radius="${ radius }" />\n`;
+					result += `${ indent3 }</geometry>\n`;
 
-    }
+				} else if ( mesh.geometry instanceof BoxGeometry ) {
 
-    // Convert the urdf xml into a well-formatted, indented format
-    _format(urdf) {
+					// box
+					result += `${ indent3 }${ getRelativeOriginNode( mesh, relativeParent ) }`;
 
-        var IS_END_TAG = /^<\//;
-        var IS_SELF_CLOSING = /(\?>$)|(\/>$)/;
-        var HAS_TEXT = /<[^>]+>[^<]*<\/[^<]+>/;
+					let { width, height, depth } = mesh.geometry.parameters;
+					width *= mesh.scale.x;
+					height *= mesh.scale.y;
+					depth *= mesh.scale.z;
 
-        var pad = (ch, num) => (num > 0 ? ch + pad(ch, num - 1) : '');
+					result += `${ indent3 }<geometry>\n`;
+					result += `${ indent4 }<box size="${ width } ${ height } ${ depth }" />\n`;
+					result += `${ indent3 }</geometry>\n`;
 
-        var tagnum = 0;
-        return urdf
-            .match(/(<[^>]+>[^<]+<\/[^<]+>)|(<[^>]+>)/g)
-            .map(tag => {
+				} else if ( mesh.geometry instanceof CylinderGeometry ) {
 
-                if (!HAS_TEXT.test(tag) && !IS_SELF_CLOSING.test(tag) && IS_END_TAG.test(tag)) {
+					// cylinder
+					result += `${ indent3 }${ getCylinderRelativeOriginNode( mesh, relativeParent ) }`;
 
-                    tagnum--;
+					let { radiusTop, height } = mesh.geometry.parameters;
+					radiusTop *= radiusTop * mesh.scale.x;
+					height *= mesh.scale.y;
 
-                }
+					result += `${ indent3 }<geometry>\n`;
+					result += `${ indent4 }<cylinder length="${ height }" radius="${ radiusTop }" />\n`;
+					result += `${ indent3 }</geometry>\n`;
 
-                var res = `${ pad('  ', tagnum) }${ tag }`;
-                if (!HAS_TEXT.test(tag) && !IS_SELF_CLOSING.test(tag) && !IS_END_TAG.test(tag)) {
+				}
 
-                    tagnum++;
+			}
 
-                }
+			if ( result === '' ) {
 
-                return res;
+				// mesh
+				const nodeClone = node.clone();
+				nodeClone.position.set( 0, 0, 0 );
+				nodeClone.rotation.set( 0, 0, 0 );
+				nodeClone.updateMatrixWorld();
 
-            })
-            .join('\n');
+				const path = processGeometryCallback( nodeClone, parentLink );
+				if ( path !== null ) {
 
-    }
+					result += `${ indent3 }${ getRelativeOriginNode( node, relativeParent ) }`;
+					result += `${ indent3 }<geometry>\n`;
+					result += `${ indent3 }<mesh filename="${ path }"/>\n`;
+					result += `${ indent3 }</geometry>\n`;
 
-    // Remove any unnecessary joints and links that fixed and have identity transforms
-    _collapseLinks(urdf) {
+				}
 
-        console.warn('URDFExporter : The "collapse" functionality isn\'t stable and my corrupt the structure of the URDF');
+			}
 
-        const xmlDoc = (new DOMParser()).parseFromString(urdf, 'text/xml');
-        const robottag = xmlDoc.children[0];
+			return result;
 
-        // cache the children as an array
-        const children = [...robottag.children];
+		}
 
-        // get the list of links indexed by name
-        const links = children.filter(t => t.tagName.toLowerCase() === 'link');
-        const joints = children.filter(t => t.tagName.toLowerCase() === 'joint');
 
-        // find the link
-        const root = links
-            .map(l => l.getAttribute('name'))
-            .filter(linkName => {
+		function processLink( link ) {
 
-                const childReferences = joints.filter(j => j.querySelector('child').getAttribute('link') === linkName);
-                return childReferences.length === 0;
+			let result = '';
+			result += `${ indent1 }<link name="${ nameMap.get( link ) }">\n`;
 
-            })[0];
+			// inertia
+			const inertial = link.inertial;
+			if ( inertial ) {
 
-        const linksMap = {};
-        links.forEach(l => linksMap[l.getAttribute('name')] = l);
+				const { position, rotation, mass, inertia } = inertial;
+				_euler.copy( rotation ).reorder( 'ZYX' );
 
-        // TODO: Do we need to traverse in reverse so as nodes are removed, they're taken into
-        // account in subsequent collapses? Order is important here.
-        joints.forEach(j => {
+				result += `${ indent2 }<inertial>\n`;
+				result += `${ indent3 }<position xyz="${ position.x } ${ position.y } ${ position.z }" rpy="${ _euler.x } ${ _euler.y } ${ _euler.z }" />\n`;
+				result += `${ indent3 }<mass value="${ mass }" />\n`;
+				result += `${ indent3 }${ getInertiaNode( inertia ) }`;
+				result += `${ indent2 }</inertial>\n`;
 
-            const origin = [...j.children].filter(t => t.tagName.toLowerCase() === 'origin')[0];
-            const type = j.getAttribute('type') || 'fixed';
+			}
 
-            // if the node is fixed and has an identity transform then we can remove it
-            const xyz = origin.getAttribute('xyz') || '0 0 0';
-            const rpy = origin.getAttribute('rpy') || '0 0 0';
-            if (type === 'fixed' && (!origin || (xyz === '0 0 0' && rpy === '0 0 0'))) {
+			// process any necessary child information
+			const childJoints = [];
+			traverseImmediateMeaningfulNodes( link, child => {
 
-                const childName =
-                    [...j.children]
-                        .filter(t => t.tagName.toLowerCase() === 'child')[0]
-                        .getAttribute('link');
+				if ( child.isURDFJoint ) {
 
-                const parentName =
-                    [...j.children]
-                        .filter(t => t.tagName.toLowerCase() === 'parent')[0]
-                        .getAttribute('link');
+					childJoints.push( child );
 
-                // how many child joints reference the same joint as this parent
-                const parentsChildren =
-                    joints.filter(j2 =>
-                        [...j.children]
-                            .filter(t => t.tagName.toLowerCase() === 'parent')
-                            .filter(t => t.getAttribute('link') === parentName)
-                            .length !== 0
-                    ).length;
+				} else if ( child.isURDFVisual ) {
 
-                // collapse the node if
-                // 1. The link we'll be removing has no children so there will be no effect
-                // 2. The link has children (like a visual node) making it meaningful AND there are
-                // no other joints that reference this parent link, so we can move the meaningful
-                // information into there
+					const contents = processVisualContents( child );
 
-                // TODO: Consider just removing the parent node instead of the child node if the child
-                // node has children. We should just remove the least complicated link.
-                if (linksMap[parentName].children.length === 0 || (linksMap[childName].children.length !== 0 && parentsChildren === 1)) {
+					if ( contents !== '' ) {
 
-                    if (linksMap[childName].children.length) {
+						result += `${ indent2 }<visual`;
+						if ( child.name ) {
 
-                        [...linksMap[childName].children].forEach(c => linksMap[parentName].appendChild(c));
+							result += ` name="${ child.name }"`;
 
-                    }
+						}
 
-                    // find joints that have this joint as the parent and move it to the parent
-                    joints.forEach(j2 =>
-                        [...j2.children]
-                            .filter(t => t.tagName.toLowerCase() === 'parent')
-                            .filter(t => t.getAttribute('link') === childName)
-                            .forEach(t => t.setAttribute('link', parentName))
-                    );
+						result += '>\n';
+						result += contents;
+						result += `${ indent2 }</visual>\n`;
 
-                    // remove this joint from the robot
-                    robottag.removeChild(j);
+					}
 
-                }
+				} else if ( child.isURDFCollider ) {
 
-            }
+					const contents = processVisualContents( child );
+					if ( contents !== '' ) {
 
-        });
+						result += `${ indent2 }<collider`;
+						if ( child.name ) {
 
-        // remove any links that arent referenced by the existing joints
-        [...robottag.children]
-            .filter(t => t.tagName.toLowerCase() === 'joint')
-            .forEach(j => {
+							result += ` name="${ child.name }"`;
 
-                const childName =
-                    [...j.children]
-                        .filter(t => t.tagName.toLowerCase() === 'child')[0]
-                        .getAttribute('link');
+						}
 
-                const parentName =
-                    [...j.children]
-                        .filter(t => t.tagName.toLowerCase() === 'parent')[0]
-                        .getAttribute('link');
+						result += '>\n';
+						result += contents;
+						result += `${ indent2 }</collider>\n`;
 
-                delete linksMap[childName];
-                delete linksMap[parentName];
+					}
 
-            });
+				} else {
 
-        // the links remaining aren't being referenced by any
-        // joints and can be removed
-        Object
-            .keys(linksMap)
-            .filter(n => n !== root)
-            .forEach(n => robottag.removeChild(linksMap[n]));
+					console.warn( `URDFExporter: Link "${ link.name }" cannot contain another link.` );
 
-        return new XMLSerializer().serializeToString(xmlDoc.documentElement);
+				}
 
-    }
+			} );
 
-    // Convert the object into a urdf and get the associated
-    // mesh and texture data
-    parse(object, jointfunc, onComplete, options = {}) {
+			result += `${ indent1 }</link>\n`;
+			linkNodes.push( result );
 
-        options = Object.assign({
+			for ( let i = 0, l = childJoints.length; i < l; i ++ ) {
 
-            createMeshCb: this._defaultMeshCallback.bind(this),
-            pathPrefix: './',
-            collapse: false,
-            meshFormat: 'dae',
-            robotName: object.name,
+				processJoint( childJoints[ i ] );
 
-        }, options);
+			}
 
-        const linksMap = new WeakMap(); // object > name
-        const texMap = new WeakMap(); // texture > image data
-        const meshes = []; // array of meshes info to save
-        const textures = []; // array of texture info to save
+		}
 
-        // used link and joint names
-        const linksNameMap = {};
-        const jointsNameMap = {};
+		function processJoint( joint ) {
 
-        // file contents
-        let urdf = `<robot name="${ options.robotName }">`;
+			// warn user of invalid structure
+			let totalLinks = 0;
+			let totalJoints = 0;
+			let totalVisual = 0;
+			let totalCollider = 0;
+			traverseImmediateMeaningfulNodes( joint, child => {
 
-        // use a custom travers function instead of Object3D.traverse so we
-        // can stop the traversal early if we have to.
-        const traverse = child => {
+				if ( child.isURDFJoint ) {
 
-            const linkName = this._makeNameUnique(child.name || `_link_`, linksNameMap);
-            linksNameMap[linkName] = true;
-            linksMap.set(child, linkName);
+					totalJoints ++;
 
-            // Create the link tag
-            let joint = '';
-            let link = `<link name="${ linkName }">`;
-            let isLeaf = false;
+				} else if ( child.isURDFVisual ) {
 
-            // Create the joint tag if it's not the root object that we're exporting
-            if (child !== object) {
+					totalVisual ++;
 
-                const parentName = linksMap.get(child.parent);
-                const jointInfo = jointfunc(child, linkName, parentName) || {};
-                const { axis, type, name, limit } = jointInfo;
-                isLeaf = !!jointInfo.isLeaf;
+				} else if ( child.isURDFCollider ) {
 
-                const jointName = this._makeNameUnique(name || '_joint_', jointsNameMap);
-                jointsNameMap[jointName] = true;
+					totalCollider ++;
 
-                joint = `<joint name="${ jointName }" type="${ type || 'fixed' }">`;
-                {
+				} else if ( child.isURDFLink ) {
 
-                    const pos = child.position.toArray().join(' ');
+					totalLinks ++;
 
-                    // URDF uses fixed-axis rotations, while THREE uses moving-axis rotations
-                    const euler = child.rotation.clone();
-                    euler.reorder('ZYX');
+				}
 
-                    // The last field of the array is the rotation order 'ZYX', so
-                    // remove that before saving
-                    const array = euler.toArray();
-                    array.pop();
+			} );
 
-                    const rot = array.join(' ');
+			if ( totalLinks > 1 ) console.warn( `URDFExporter: too many links are children of Joint ${ joint.name }.` );
+			if ( totalJoints > 0 ) console.warn( `URDFExporter: joints cannot be children of Joint ${ joint.name }.` );
+			if ( totalVisual > 0 ) console.warn( `URDFExporter: visual nodes cannot be children of Joint ${ joint.name }.` );
+			if ( totalCollider > 0 ) console.warn( `URDFExporter: collider nodes cannot be children of Joint ${ joint.name }.` );
 
-                    joint += `<origin xyz="${ pos }" rpy="${ rot }" />`;
+			// find the relevant parent and child joints
+			const parentLink = getParentLink( joint );
+			const parentJoint = getParentJoint( joint );
+			const childLink = getChildLink( joint );
 
-                    joint += `<parent link="${ parentName }" />`;
+			// construct the node
+			let result = '';
+			result += `${ indent1 }<joint name="${ nameMap.get( joint ) }" type="${ joint.jointType || 'fixed' }">\n`;
 
-                    joint += `<child link="${ linkName }" />`;
+			result += `${ indent2 }${ getRelativeOriginNode( joint, parentJoint || parentLink ) }`;
 
-                    if (axis) {
+			result += `${ indent2 }<parent link="${ parentLink.name }"/>\n`;
 
-                        joint += `<axis xyz="${ axis.x } ${ axis.y } ${ axis.z }" />`;
+			result += `${ indent2 }<child link="${ childLink.name }"/>\n`;
 
-                    }
+			if ( joint.jointType === 'revolute' || joint.jointType === 'continuous' || joint.jointType === 'prismatic' ) {
 
-                    if (limit) {
+				const axis = joint.axis;
+				result += `${ indent2 }<axis xyz="${ axis.x } ${ axis.y } ${ axis.z }"/>\n`;
 
-                        let limitNode = `<limit velocity="${ limit.velocity || 0 }" effort="${ limit.effort || 0 }"`;
-                        if (limit.lower != null) {
+			}
 
-                            limitNode += ` lower="${ limit.lower }"`;
+			if ( joint.limit && joint.jointType !== 'fixed' ) {
 
-                        }
+				const limit = joint.limit;
+				result += `${ indent2 }<limit effort="${ limit.effort || 0 }" velocity="${ limit.velocity || 0 }"`;
+				if ( joint.jointType !== 'continuous' && 'lower' in limit && 'upper' in limit ) {
 
-                        if (limit.upper != null) {
+					result += ` lower="${ limit.lower }" upper="${ limit.upper }"`;
 
-                            limitNode += ` upper="${ limit.upper }"`;
+				}
 
-                        }
+				result += '/>\n';
 
-                        limitNode += ' ></limit>';
-                        joint += limitNode;
+			}
 
-                    }
+			result += `${ indent1 }</joint>\n`;
 
-                }
-                joint += '</joint>';
+			jointNodes.push( result );
 
-            }
+			processLink( childLink );
 
-            // Try to add a mesh if this node is a mesh or the current
-            // link should be considered a leaf and traversal is stopped
-            if (child instanceof THREE.Mesh || isLeaf) {
+		}
 
-                // TODO: Some deduping should be happening here
-                // Issue #9
-                const meshInfo = options.createMeshCb(child, linkName, options.meshFormat);
+	}
 
-                if (meshInfo != null) {
-
-                    // put the meshes in the `mesh` directory and the
-                    // textures in the same directory.
-                    meshInfo.directory = 'meshes/';
-                    meshInfo.textures.forEach(t => {
-
-                        t.directory =
-                            `${ meshInfo.directory }${ t.directory || '' }`
-                                .replace(/\\/g, '/')
-                                .replace(/\/+/g, '/');
-
-                    });
-
-                    meshes.push(meshInfo);
-                    if (meshInfo.textures) {
-
-                        textures.push(...meshInfo.textures);
-
-                    }
-
-                    // Create the visual node based on the meshInfo
-                    link += '<visual>';
-                    {
-
-                        link += '<origin xyz="0 0 0" rpy="0 0 0" />';
-
-                        link += '<geometry>';
-                        {
-
-                            const meshpath = this._normalizePackagePath(`${ options.pathPrefix }${ meshInfo.directory }${ meshInfo.name }.${ meshInfo.ext }`);
-                            link += `<mesh filename="${ meshpath }" scale="${ child.scale.toArray().join(' ') }" />`;
-
-                        }
-                        link += '</geometry>';
-
-                        if (meshInfo.material) {
-
-                            link += '<material name="">';
-                            {
-
-                                if (meshInfo.material.color || meshInfo.material.opacity != null) {
-
-                                    const col = meshInfo.material.color;
-                                    const opacity = meshInfo.material.opacity;
-
-                                    const colStr = col ? `${ col.r } ${ col.g } ${ col.b }` : '1 1 1';
-                                    const opacityStr = opacity != null ? opacity : 1;
-
-                                    const rgba = `${ colStr } ${ opacityStr }`;
-
-                                    link += `<color rgba="${ rgba }" />`;
-
-                                }
-
-                                if (meshInfo.material.texture) {
-
-                                    let texInfo = texMap.get(meshInfo.material.texture);
-                                    if (!texInfo) {
-
-                                        const ext = 'png';
-                                        texInfo = {
-                                            directory: 'textures/',
-                                            name: meshInfo.name,
-                                            ext,
-                                            data: this._imageToData(meshInfo.material.texture.image, ext),
-                                            original: meshInfo.material.texture,
-                                        };
-                                        texMap.set(meshInfo.material.texture, texInfo);
-                                        textures.push(texInfo);
-
-                                    }
-
-                                    const texpath = this._normalizePackagePath(`${ options.pathPrefix }textures/${ texInfo.name }.${ texInfo.ext }`);
-                                    link += `<texture filename="${ texpath }" />`;
-
-                                }
-
-                            }
-                            link += '</material>';
-
-                        }
-
-                    }
-                    link += '</visual>';
-
-                }
-
-                // TODO: add matching collision
-
-            }
-
-            link += '</link>';
-
-            urdf += link;
-            urdf += joint;
-
-            // traverse all the children if this link
-            // isn't considered a leaf
-            if (!isLeaf) {
-
-                child.children.forEach(c => traverse(c));
-
-            }
-
-        };
-
-        // traverse the object
-        traverse(object);
-
-        urdf += '</robot>';
-
-        // format the final output
-        const finalurdf = this._format(options.collapse ? this._collapseLinks(urdf) : urdf);
-
-        const result = { data: finalurdf, meshes, textures };
-
-        if (onComplete) onComplete(result);
-
-        return result;
-
-    }
-
-};
+}

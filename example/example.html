@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <title>URDF Exporter Example</title>
+
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        urdf-viewer {
+            background: #222;
+            width: 100vw;
+            height: 100vh;
+        }
+
+		#params {
+			position: absolute;
+			left: 0;
+			bottom: 0;
+			padding: 10px;
+			font-family: monospace;
+			color: white;
+			pointer-events: none;
+			opacity: 0.5;
+		}
+
+		#params ul {
+			list-style: none;
+			padding-left: 5px;
+		}
+
+		#params li {
+			margin: 5px;
+			white-space: pre;
+		}
+    </style>
+</head>
+<body>
+    <urdf-viewer up="+Z" display-shadow auto-redraw></urdf-viewer>
+	<div id="params">
+		Query Parameters
+		<ul>
+			<li>urdf         : url to URDF file</li>
+			<li>package      : url to URDF package directory</li>
+			<li>renderSource : boolean indicating to render the original file</li>
+			<li>download     : boolean indicating to download the result</li>
+		</ul>
+	</div>
+    <script src="./example.js" type="module"></script>
+</body>
+</html>

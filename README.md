@@ -1,166 +1,201 @@
 # urdf-exporter-js
 
 [![npm version](https://img.shields.io/npm/v/urdf-exporter.svg?style=flat-square)](https://www.npmjs.com/package/urdf-exporter)
-[![travis build](https://img.shields.io/travis/gkjohnson/urdf-exporter-js.svg?style=flat-square)](https://travis-ci.org/gkjohnson/urdf-exporter-js)
 [![lgtm code quality](https://img.shields.io/lgtm/grade/javascript/g/gkjohnson/urdf-exporter-js.svg?style=flat-square&label=code-quality)](https://lgtm.com/projects/g/gkjohnson/urdf-exporter-js/)
+[![build](https://img.shields.io/github/workflow/status/gkjohnson/urdf-exporter-js/Node.js%20CI?style=flat-square&label=build)](https://github.com/gkjohnson/urdf-exporter-js/actions)
 [![github](https://flat.badgen.net/badge/icon/github?icon=github&label)](https://github.com/gkjohnson/urdf-exporter-js/)
 [![twitter](https://flat.badgen.net/twitter/follow/garrettkjohnson)](https://twitter.com/garrettkjohnson)
 [![sponsors](https://img.shields.io/github/sponsors/gkjohnson?style=flat-square&color=1da1f2)](https://github.com/sponsors/gkjohnson/)
 
-Utility for exporting THREE.js object trees as a URDF file.
+Utility for exporting a three.js object hierarchy as a URDF.
+
+# Use
+
+```js
+import { URDFExporter } from 'urdf-exporter';
+import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js';
+
+let urdfModel;
+// ... create a model using the URDF classes for export
+
+const models = {};
+const exporter = new URDFExporter();
+exporter.processGeometryCallback = ( model, link ) => {
+
+	const name = `${ link.name }_mesh.stl`;
+	models[ name ] = new STLExporter().parse( model );
+	return name;
+
+};
+
+urdfModel.updateMatrixWorld();
+const urdf = exporter.parse( urdfModel );
+
+// ... urdf content ready!
+
+```
+
+
+# API
+
+## URDFConverter
+
+Utility class to enable convenient conversion from three.js objects to URDF classes for export.
+
+### generateCallback
+
+```js
+generateCallback : ( object : Object3D ) => Object3D
+```
+
+Callback used for generating URDF class equivalents. The function is expected to return a cloned version of the provided mesh or a URDF class describing the analogous object. The returned object must be the child object that will have children added to it. The generator will then find the root parent to add to the previously processed object.
+
+For example a custom three.js joint type could converted into a joint and link connection which can be run through the `URDFExporter`.
+
+### postprocessCallback
+
+```js
+postprocessCallback : ( object : URDFRobot ) => void
+```
+
+A function that takes the generated URDF result to enable fixups and other types of postprocessing that might be needed.
 
 ## URDFExporter
-```js
-// Function callback for defining the attributes for
-// the joint to be generated for the associated link.
-// If not provided, `fixed` joint type is used.
-function jointFunc (obj, childName, parentName) {
-    if (obj.urdf) {
-        return {
-            name: obj.name,
-            type: obj.jointType,
-            axis: obj.axis || new THREE.Vector3(0, 0, 1),
-            limit: {
-                lower: obj.limit.lower,
-                upper: obj.limit.upper,
-            },
-            isLeaf: false
-        };
-    }
-    return {};
-}
 
-// Generate the URDF file and associate meshes and textures
-const exporter = new URDFExporter();
-const res = exporter.parse(robot, jointFunc, null, { collapse: true, robotName: 'T12' });
-
-// Save out a zip using JSZip (https://stuk.github.io/jszip/)
-// with the file structure
-
-// /<name>.urdf
-// /meshes/<mesh>.<ext>
-// /textures/<texture>.<ext>
-const zip = new JSZip();
-zip.file('T12.URDF', res.data);
-res.meshes.forEach(m => zip.file(`${ m.directory }${ m.name }.${ m.ext }`, m.data));
-res.textures.forEach(t => zip.file($ {t.directory }`${ t.name }.${ t.ext }`, m.data));
-
-zip
-    .generateAsync({ type: 'uint8array' })
-    .then(zipdata => saveData(zipdata, 't12urdf.zip'));
-```
-
-### URDFExporter.parse(object, jointfunc, onComplete, options = {}) : Object
-
-Processes the given `object` into a URDF file and assets. Returns an object of the form
-```js
-{
-  data: <string>,
-  meshes: [{ directory, name, ext, data }, ...],
-  textures: [{ directory, name, ext, data }, ...]
-}
-```
-
-#### object : THREE.Object3D
-_required_
-
-The THREE.js OBject3D to convert to a URDF file and associated meshes and textures.
-
-#### jointfunc(object, childLinkName, parentLinkName) : Function
-_required_
-
-A function used to define the attributes for a joint connecting a link to its parent link. Takes the object being converted to a link, the child link name and parent link name. An example with the full set of output data:
+### .indent
 
 ```js
-function joinfunc(childObject, childLinkName, parentLinkName) {
-  return {
-
-    // The name of the joint.
-    // Defaults to '_joint_<number>'.
-    name: `${parentLinkName}2${childLinkName}`,
-
-    // The URDF joint articulation type.
-    // Defaults to 'fixed'.
-    type: `revolute`,
-
-    // The axis of movement or rotation for any given joint.
-    // Required for non-fixed joints.
-    axis: new THREE.Vector3(1, 0, 0),
-
-    // Descriptions of the limits for any given joint
-    limits: {
-      lower: -30,  // defaults to 0
-      upper: 30,   // defaults to 0
-      velocity: 1, // defaults to 0
-      effort: 1,   // defaults to 0
-    },
-
-    // A field indicating that the link for the provided childObject
-    // should be considered a leaf link and no children should be
-    // added for it.
-    // Defaults to false.
-    isLeaf: false,
-  }
-}
+indent = '\t' : string
 ```
-#### onComplete(result) : Function
 
-Called once the URDF file has been generated.
+The set of indentation characters to use.
 
-#### options
-##### createMeshCb(obj, linkname, meshFormat) : Function
+### .processGeometryCallback
 
-A function used to generate mesh data for a given node. STL or DAE files are generated by default. An example function with the full set of output data:
 ```js
-function createMeshCb(obj, linkName, meshFormat) {
-  // meshFormat is passed from `options.meshFormat`.
-  // Can be ignored.
-
-  const res = this.ColladaExporter.parse(o);
-  return {
-      // File name
-      name: linkName,
-
-      // File extension
-      ext: 'dae',
-
-      // File content
-      data: res.data,
-
-      // Array of texture data to save out. Object must
-      // include name, ext, and data to write out.
-      textures: res.textures,
-
-      // The material information to include. Material
-      // is excluded if this is not defined.
-      // This is not needed for mesh files that include
-      // material information.
-      material: {
-
-          color: obj.material.color,
-          opacity: obj.material.opacity,
-          texture: obj.material.map
-
-      }
-  }
-}
+processGeometryCallback : ( node : Object3D, link : URDFLink ) => string
 ```
 
-##### pathPrefix : String
+The callback for to use when processing geometry. Geometry must be processed and cached in order to be exported. A file path is returned from the function.
 
-The prefix to prepend to all file paths for meshes and textures. Defaults to `./`.
+### .parse
 
-This could be set to a ROS package URI, such as `package://robot-name/`.
+```js
+parse( root : URDFRobot ) : string
+```
 
-##### collapse : Boolean
+Parses the object into a urdf file. Returns the URDF contents as a string. The hierarchy matrix world must be updated before calling this function.
 
-Attempts to collapse unnecessary joints to remove any meaningless links in the URDF (identity transform, fixed). Experimental. Defaults to false.
+## URDFLimit
 
-##### meshFormat : String
+Class containing values to export for joint limits.
 
-The preferred format to export meshes as. Is passed to the `meshFunc` optional function. Defaults to `dae`.
+### .upper
 
-##### robotName : String
+```js
+upper = 0 : Number
+```
 
-The name of the robot to add into the `<robot>` tag `name` field. Defaults to the name of the object being converted.
+### .lower
 
+```js
+lower = 0 : Number
+```
+
+### .velocity
+
+```js
+velocity = 0 : Number
+```
+
+### .effort
+
+```js
+effort = 0 : Number
+```
+
+## URDFInertialFrame
+
+Class containing values for the link inertial frame.
+
+### .position
+
+```js
+position : Vector3
+```
+
+### .rotation
+
+```js
+rotation : Euler
+```
+
+### .mass
+
+```js
+mass = 0 : Number
+```
+
+### inertia
+
+```js
+inertial : Matrix3
+```
+
+The upper triangular matrix is used to define the `xx`, `yy`, `zz`, `xy`, `yz`, and `xz` fields.
+
+## URDFLink
+
+_extends THREE.Object3D_
+
+When this field is encountered a new link is created in the URDF file.
+
+### .inertial
+
+```js
+inertial : URDFInertialFrame
+```
+
+## URDFJoint
+
+_extends THREE.Object3D_
+
+When this field is encountered a new joint is created in the URDF file.
+
+### .jointType
+
+```js
+jointType = 'fixed' : string
+```
+
+### .axis
+
+```js
+axis : Vector3
+```
+
+### .limit
+
+```js
+limit : URDFLimit
+```
+
+## URDFRobot
+
+_extends URDFLink_
+
+A class describing the root of the URDF Robot.
+
+### .robotName
+
+```js
+robotName = '' : string
+```
+
+## URDFVisual
+
+_extends THREE.Object3D_
+
+## URDFCollider
+
+_extends THREE.Object3D_

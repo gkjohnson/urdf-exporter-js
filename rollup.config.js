@@ -1,31 +1,40 @@
-const path = require('path');
+const path = require( 'path' );
+const inputPath = path.join( __dirname, './src/index.js' );
 
-export default
-Object.entries({
-    URDFExporter: 'URDFExporter.js',
-}).map(([ name, file ]) => {
+export default [ {
 
-    const inputPath = path.join(__dirname, `./src/${ file }`);
-    const outputPath = path.join(__dirname, `./umd/${ file }`);
+	input: inputPath,
+	treeshake: false,
+	external: p => /^three/.test( p ),
 
-    return {
+	output: {
 
-        input: inputPath,
-        treeshake: false,
-        external: p => p !== inputPath,
+		name: 'URDFExporter',
+		extend: true,
+		format: 'umd',
+		file: path.join( __dirname, './build/index.umd.cjs' ),
+		sourcemap: true,
 
-        output: {
+		globals: path => /^three/.test( path ) ? 'THREE' : null,
 
-            name,
-            extend: true,
-            format: 'umd',
-            file: outputPath,
-            sourcemap: true,
+	},
 
-            globals: path => /^three/.test(path) ? 'THREE' : null,
+}, {
 
-        },
+	input: inputPath,
+	treeshake: false,
+	external: p => /^three/.test( p ),
 
-    };
+	output: {
 
-});
+		name: 'URDFExporter',
+		extend: true,
+		format: 'es',
+		file: path.join( __dirname, './build/index.module.js' ),
+		sourcemap: true,
+
+		globals: path => /^three/.test( path ) ? 'THREE' : null,
+
+	},
+
+} ];
