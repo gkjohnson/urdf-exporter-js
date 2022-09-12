@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [0.4.0] - unreleased
 ### Changed
 - Rewrite of exporter to make results more reliable and consistent. Exported URDF classes are now required for exporting a model. Convert any target export into the model that uses the URDF classes.
+- Add the URDFConverter class to make it simpler to convert three.js hierarchies to URDF classes.
 
 ## [0.3.1] - 2018-10-30
 ### Changed
