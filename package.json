@@ -2,7 +2,7 @@
   "name": "urdf-exporter",
   "version": "0.3.1",
   "description": "THREE.js utility for exporting object trees as a URDF file",
-  "main": "umd/index.js",
+  "main": "build/index.umd.cjs",
   "module": "src/index.js",
   "files": [
     "src/*",
