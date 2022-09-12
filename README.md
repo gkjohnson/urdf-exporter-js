@@ -1,7 +1,6 @@
 # urdf-exporter-js
 
 [![npm version](https://img.shields.io/npm/v/urdf-exporter.svg?style=flat-square)](https://www.npmjs.com/package/urdf-exporter)
-[![lgtm code quality](https://img.shields.io/lgtm/grade/javascript/g/gkjohnson/urdf-exporter-js.svg?style=flat-square&label=code-quality)](https://lgtm.com/projects/g/gkjohnson/urdf-exporter-js/)
 [![build](https://img.shields.io/github/workflow/status/gkjohnson/urdf-exporter-js/Node.js%20CI?style=flat-square&label=build)](https://github.com/gkjohnson/urdf-exporter-js/actions)
 [![github](https://flat.badgen.net/badge/icon/github?icon=github&label)](https://github.com/gkjohnson/urdf-exporter-js/)
 [![twitter](https://flat.badgen.net/twitter/follow/garrettkjohnson)](https://twitter.com/garrettkjohnson)
