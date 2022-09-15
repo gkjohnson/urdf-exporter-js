@@ -38,7 +38,7 @@ const urdf = exporter.parse( urdfModel );
 
 Converting an existing model to one made with the appropriate classes.
 ```js
-import { URDFConverter } from 'urdf-exporter';
+import { URDFConverter, URDFRobot, URDFLink, URDFJoint, URDFVisual } from 'urdf-exporter';
 
 let model;
 
