@@ -10,6 +10,8 @@ Utility for exporting a three.js object hierarchy as a URDF.
 
 # Use
 
+Exporting a model constructed from URDF classes like `URDFLink` and `URDFJoint`.
+
 ```js
 import { URDFExporter } from 'urdf-exporter';
 import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js';
@@ -34,6 +36,62 @@ const urdf = exporter.parse( urdfModel );
 
 ```
 
+Converting an existing model to one made with the appropriate classes.
+```js
+import { URDFConverter } from 'urdf-exporter';
+
+let model;
+
+// ... create or load a model
+
+const convert = new URDFConverter();
+converter.generateCallback = child => {
+
+  let result;
+  if ( child.linkData ) {
+  
+    if ( child === model ) {
+    
+      result = new URDFRobot();
+      result.robotName = 'my-robot-urdf';
+    
+    } else {
+    
+      result = new URDFLink();
+    
+    }
+    
+    result.name = child.linkData.name;
+  
+  } else if ( child.jointData ) {
+  
+    result = new URDFJoint();
+    result.name = child.jointData.name;
+    result.jointType = 'revolute';
+    result.limit.lower = - Math.PI / 2;
+    result.limit.upper = Math.PI / 2;
+  
+  } else if ( child.isMesh ) {
+  
+    result = new URDFVisual()
+    result.add( child.clone() );
+  
+  } else {
+  
+      result = new Group();
+  
+  }
+  
+  result.position.copy( child.position );
+  result.quaternion.copy( child.quaternion );
+  result.scale.copy( child.scale );
+
+};
+
+const urdfModel = converter.generate( model );
+
+// ... urdf class hierarchy!
+```
 
 # API
 
@@ -41,7 +99,7 @@ const urdf = exporter.parse( urdfModel );
 
 Utility class to enable convenient conversion from three.js objects to URDF classes for export.
 
-### generateCallback
+### .generateCallback
 
 ```js
 generateCallback : ( object : Object3D ) => Object3D
@@ -51,13 +109,21 @@ Callback used for generating URDF class equivalents. The function is expected to
 
 For example a custom three.js joint type could converted into a joint and link connection which can be run through the `URDFExporter`.
 
-### postprocessCallback
+### .postprocessCallback
 
 ```js
 postprocessCallback : ( object : URDFRobot ) => void
 ```
 
 A function that takes the generated URDF result to enable fixups and other types of postprocessing that might be needed.
+
+### .generate
+
+```js
+generate( object : Object3D ) : URDFRobot
+```
+
+Traverses the given hierarchy and generates a converted URDF hierarchy.
 
 ## URDFExporter
 
