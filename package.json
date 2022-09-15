@@ -1,6 +1,6 @@
 {
   "name": "urdf-exporter",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "THREE.js utility for exporting object trees as a URDF file.",
   "main": "build/index.umd.cjs",
   "module": "src/index.js",
@@ -45,7 +45,7 @@
     "eslint-config-mdcs": "^5.0.0",
     "concurrently": "^7.4.0",
     "eslint": "^7.32.0",
-		"eslint-plugin-jest": "^23.20.0",
+    "eslint-plugin-jest": "^23.20.0",
     "jest": "^27.2.4",
     "rollup": "^0.66.6",
     "parcel": "^2.0.0",
