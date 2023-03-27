@@ -201,7 +201,7 @@ rotation : Euler
 mass = 0 : Number
 ```
 
-### inertia
+### .inertia
 
 ```js
 inertial : Matrix3
